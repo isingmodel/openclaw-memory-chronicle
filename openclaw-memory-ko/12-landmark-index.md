@@ -1,10 +1,10 @@
-# 12장. 이정표 커밋과 릴리스 색인
+# 12장. 이정표 커밋과 출시 인덱스
 
 [← 이전: 맺음말](afterword.md) · [목차](README.md) · [다음: 출처와 재현 안내 →](13-references-reproduction-and-conclusion.md)
 
-앞선 장들은 기억 시스템의 변화를 문제와 선택의 연쇄로 풀어냈다. 이제 그 이야기를 다시 검증하고 싶은 독자를 위해, 41개 이정표의 빠른 표와 54개 고유 커밋의 상세 근거를 한곳에 모은다. 이 색인은 처음부터 끝까지 읽는 본문이라기보다, 특정 기능이 언제 등장했고 어느 태그 포함 경계를 통과했는지 되짚는 지도다.
+앞선 장들은 기억 시스템의 변화를 문제와 선택의 연쇄로 풀어냈다. 이제 그 이야기를 다시 검증하고 싶은 독자를 위해, 41개 이정표의 빠른 표와 54개 고유 커밋의 상세 근거를 한곳에 모은다. 이 인덱스는 처음부터 끝까지 읽는 본문이라기보다, 특정 기능이 언제 등장했고 어느 태그 포함 경계를 통과했는지 되짚는 지도다.
 
-표를 읽을 때는 “커밋됨”, “`main`에 병합됨”, “릴리스 태그에 포함됨”을 구분해야 한다. 날짜는 각 행에 첫 번째로 나열된 커밋의 UTC 기준 커미터 날짜이며, 마지막 열은 커밋 포함 관계와 태그 생성 순서로 찾은 **최초 포함 태그**다. 이는 설치 현황 조사나 기능의 실사용 가능 시점을 완전히 대신하지 않는다. 아키텍처의 “현재”는 `a115af277410a91fb039d2ed699eafad706f5c73`에 고정한다. 다만 출시 상태가 낡지 않도록 이후 생성된 태그도 2026-07-26에 별도로 확인했으며, 이 후속 확인은 고정본의 런타임 계약을 바꾸지 않는다.
+표를 읽을 때는 “커밋됨”, “`main`에 병합됨”, “출시 태그에 포함됨”을 구분해야 한다. 날짜는 각 행에 첫 번째로 나열된 커밋의 UTC 기준 커미터 날짜이며, 마지막 열은 커밋 포함 관계와 태그 생성 순서로 찾은 **최초 포함 태그**다. 이는 설치 현황 조사나 기능의 실사용 가능 시점을 완전히 대신하지 않는다. 아키텍처의 “현재”는 `a115af277410a91fb039d2ed699eafad706f5c73`에 고정한다. 다만 출시 상태가 낡지 않도록 이후 생성된 태그도 2026-07-26에 별도로 확인했으며, 이 후속 확인은 고정본의 런타임 계약을 바꾸지 않는다.
 
 ## 빠른 연대기
 
@@ -37,9 +37,9 @@
 | 2026-03-26 | 플러그인 소유 엔진과 호스트 SDK 추출                                   | [`v2026.3.28-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.3.28-beta.1) |
 | 2026-03-29 | CJK 인식 FTS 정체성                                                    | [`v2026.3.31-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.3.31-beta.1) |
 | 2026-04-04 | Dreaming 회상 추적·승격                                                | [`v2026.4.5`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.5)                 |
-| 2026-04-06 | Memory Wiki 복원과 기능이 처음 포함된 릴리스                           | [`v2026.4.7`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.7)                 |
+| 2026-04-06 | Memory Wiki 복원과 기능이 처음 포함된 출시                             | [`v2026.4.7`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.7)                 |
 | 2026-04-09 | Active Memory                                                          | [`v2026.4.10`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.10)               |
-| 2026-04-12 | 런타임 시작 시 일일 문맥                                               | [`v2026.4.12-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.12-beta.1) |
+| 2026-04-12 | 런타임 시작 시 일일 컨텍스트                                           | [`v2026.4.12-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.12-beta.1) |
 | 2026-04-23 | 런타임 루트를 대문자로만 제한하는 정책                                 | [`v2026.4.23-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.23-beta.1) |
 | 2026-04-25 | 검색 후 세션 적중 가시성과 코퍼스 소스 선택                            | [`v2026.4.24-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.24-beta.1) |
 | 2026-06-07 | Dreaming 기계 상태의 SQLite 이전                                       | [`v2026.6.7-alpha.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.6.7-alpha.1) |
@@ -52,11 +52,11 @@
 | 2026-07-16 | 원자적 승격과 LanceDB 소유권                                           | [`v2026.7.2-beta.2`](https://github.com/openclaw/openclaw/releases/tag/v2026.7.2-beta.2)   |
 | 2026-07-16 | CLI·macOS·Linux 온보딩의 메모리 전용 가져오기와 Hermes 지원            | `v2026.7.2-beta.2`                                                                         |
 | 2026-07-17 | QMD 조정, Memory Wiki 캐시, 런타임 저널의 SQLite 이전                  | `v2026.7.2-beta.3` / 런타임 저널은 `v2026.7.2-beta.4`                                      |
-| 2026-07-18 | 보호된 교차 대화 회상과 기본값                                         | `v2026.7.2-beta.3` / 조건부 기본값은 `v2026.7.2-beta.4`                                    |
+| 2026-07-18 | 보호된 대화 간 회상과 기본값                                           | `v2026.7.2-beta.3` / 조건부 기본값은 `v2026.7.2-beta.4`                                    |
 
 마지막 두 행은 아키텍처 기준일에 태그 밖이던 변경도 며칠 뒤 출시될 수 있음을 보여 준다. 역사를 재현하거나 특정 설치의 동작을 판단할 때는 고정 SHA와 태그 생성 시점을 함께 확인해야 한다. **마지막 출시 상태 검증: 2026-07-26.**
 
-## 동기와 근거 색인
+## 동기와 근거 인덱스
 
 아래 표는 위의 41개 이정표와 같은 순서로 정확히 한 행씩 대응한다. **주된 변화 동기**는 확인된 변화가 풀려 한 문제를 짧게 적고, **동기 출처**는 0장에서 정의한 네 부류로 분류한다. **증거 강도·근거**는 동기를 뒷받침하는 주 증거를 표시한다. 현재 계약은 현재 시점의 상태를 확인하는 자료일 뿐 과거 동기의 증거로 세지 않았으며, 구현과 직접 연결되지 않은 유사 이슈는 맥락적·비인과라고 밝혔다.
 
@@ -72,7 +72,7 @@
 
 - **커밋:** [`c43cdc5ac3d3`](https://github.com/openclaw/openclaw/commit/c43cdc5ac3d3058238b1ea5579d4700e5345c3b2)
 - **최초 포함 태그:** [`v1.2.0`](https://github.com/openclaw/openclaw/releases/tag/v1.2.0)
-- **해결하려 한 문제:** 사용자별 내구성 문맥이 새 세션의 인지에 다시 들어오게 한다.
+- **해결하려 한 문제:** 사용자별 영속 컨텍스트를 새 세션에서 다시 읽게 한다.
 - **동기 분류:** 설계·소유권 압력
 - **근거 판정:** **코드에서 추론** — [커밋](https://github.com/openclaw/openclaw/commit/c43cdc5ac3d3058238b1ea5579d4700e5345c3b2)의 시작 지침에서 가장 좁게 추론했다.
 
@@ -120,7 +120,7 @@
 
 - **커밋:** [`c2a74d6d2a1b`](https://github.com/openclaw/openclaw/commit/c2a74d6d2a1bd57889ff4bb1d7e43621f49e3c63)
 - **최초 포함 태그:** [`v2026.1.5`](https://github.com/openclaw/openclaw/releases/tag/v2026.1.5)
-- **해결하려 한 문제:** 세션이 끝나면 사라지는 머릿속 메모 대신 내구성 있는 파일 기록을 요구한다.
+- **해결하려 한 문제:** 세션이 끝나면 사라지는 머릿속 메모 대신 영속 파일 기록을 요구한다.
 - **동기 분류:** 설계·소유권 압력
 - **근거 판정:** **명시적** — [커밋 본문](https://github.com/openclaw/openclaw/commit/c2a74d6d2a1bd57889ff4bb1d7e43621f49e3c63)이 “세션을 넘지 못하는 정신적 메모”를 이유로 든다.
 
@@ -128,7 +128,7 @@
 
 - **커밋:** [`7d1fee70e76f`](https://github.com/openclaw/openclaw/commit/7d1fee70e76f2f634f1b41fca927ee663914183a), [`9ffea23f31ca`](https://github.com/openclaw/openclaw/commit/9ffea23f31ca1df5183b25668f8f814bee0fb34e)
 - **최초 포함 태그:** [`v2026.1.8`](https://github.com/openclaw/openclaw/releases/tag/v2026.1.8)
-- **해결하려 한 문제:** 원시 일지에서 장기 사실을 선별하되 개인 문맥이 공유 맥락으로 새지 않게 한다.
+- **해결하려 한 문제:** 원시 일지에서 장기 사실을 선별하되 개인 메모리가 공유 대화로 새지 않게 한다.
 - **동기 분류:** 설계·소유권 압력
 - **근거 판정:** **명시적** — [도입 커밋](https://github.com/openclaw/openclaw/commit/7d1fee70e76f2f634f1b41fca927ee663914183a)과 [유지보수 커밋](https://github.com/openclaw/openclaw/commit/9ffea23f31ca1df5183b25668f8f814bee0fb34e)이 보안·선별 의도를 직접 밝힌다.
 
@@ -144,7 +144,7 @@
 
 - **커밋:** [`7dbb21be8e57`](https://github.com/openclaw/openclaw/commit/7dbb21be8e5778deeb63ed3db9abc243ffa83cac)
 - **최초 포함 태그:** [`v2026.1.11`](https://github.com/openclaw/openclaw/releases/tag/v2026.1.11)
-- **해결하려 한 문제:** 컴팩션으로 문맥이 사라지기 직전에 의미 메모리를 기록할 마지막 기회를 보장한다.
+- **해결하려 한 문제:** 컴팩션으로 컨텍스트가 사라지기 직전에 의미 메모리를 기록할 마지막 기회를 보장한다.
 - **동기 분류:** 설계·소유권 압력
 - **근거 판정:** **코드에서 추론** — [커밋](https://github.com/openclaw/openclaw/commit/7dbb21be8e5778deeb63ed3db9abc243ffa83cac)의 실행 시점과 앞선 헤드룸 변경에서 좁게 추론했다.
 
@@ -234,7 +234,7 @@
 - **최초 포함 태그:** [`v2026.3.11-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.3.11-beta.1)
 - **해결하려 한 문제:** 기본 Markdown 경계를 넓히지 않고 명시적으로 고른 이미지·오디오 코퍼스만 검색에 넣는다.
 - **동기 분류:** 설계·소유권 압력
-- **근거 판정:** **명시된 목표와 코드 추론** — [PR #43460](https://github.com/openclaw/openclaw/pull/43460)은 이미지·오디오 색인, 옵트인 추가 경로, Gemini 제한, 실패 시 닫힘을 직접 적는다. 비용·프라이버시 때문에 그 범위를 골랐다는 해석은 구현 경계에서 추론하며, 실제 무단 수집 사건은 확인되지 않았다.
+- **근거 판정:** **명시된 목표와 코드 추론** — [PR #43460](https://github.com/openclaw/openclaw/pull/43460)은 이미지·오디오 인덱스, 옵트인 추가 경로, Gemini 제한, 실패 시 닫힘을 직접 적는다. 비용·프라이버시 때문에 그 범위를 골랐다는 해석은 구현 경계에서 추론하며, 실제 무단 수집 사건은 확인되지 않았다.
 
 ### 2026-03-26 — 플러그인 소유 엔진과 호스트 SDK 추출
 
@@ -260,7 +260,7 @@
 - **동기 분류:** 설계·소유권 압력
 - **근거 판정:** **명시된 목표와 코드 추론** — [PR #60569](https://github.com/openclaw/openclaw/pull/60569)은 회상 기록, 가중 신호, 초기 임계값, 수동·예약 승격 흐름을 직접 적지만 왜 그 신호와 수치를 선택했는지는 설명하지 않는다. [이슈 #102](https://github.com/openclaw/openclaw/issues/102)의 장기 승격 요구는 연결이 없어 **맥락적·비인과**다.
 
-### 2026-04-06 — Memory Wiki 복원과 기능이 처음 포함된 릴리스
+### 2026-04-06 — Memory Wiki 복원과 기능이 처음 포함된 출시
 
 - **커밋:** [`5716d83336fd`](https://github.com/openclaw/openclaw/commit/5716d83336fd3411ba515659af4879ae8518563f)
 - **최초 포함 태그:** [`v2026.4.7`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.7)
@@ -276,7 +276,7 @@
 - **동기 분류:** 사용자·유지보수자 요청
 - **근거 판정:** **명시적** — [PR #63286](https://github.com/openclaw/openclaw/pull/63286)이 “도구 사용을 주 모델에 의존하지 않는다”는 이유와 사용자 효과를 직접 밝힌다.
 
-### 2026-04-12 — 런타임 시작 시 일일 문맥
+### 2026-04-12 — 런타임 시작 시 일일 컨텍스트
 
 - **커밋:** [`94340b959830`](https://github.com/openclaw/openclaw/commit/94340b959830b8d7dd70d486617963ad2999409c)
 - **최초 포함 태그:** [`v2026.4.12-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.4.12-beta.1)
@@ -336,7 +336,7 @@
 
 - **커밋:** [`98b8c8c4ae29`](https://github.com/openclaw/openclaw/commit/98b8c8c4ae298c55ad42a99020ee689b1c3ed1c1)
 - **최초 포함 태그:** [`v2026.7.2-beta.1`](https://github.com/openclaw/openclaw/releases/tag/v2026.7.2-beta.1)
-- **해결하려 한 문제:** 여러 에이전트가 하나의 볼트를 공유해 검색·프롬프트 문맥이 섞이는 문제를 격리한다.
+- **해결하려 한 문제:** 여러 에이전트가 하나의 볼트를 공유해 검색·프롬프트 컨텍스트가 섞이는 문제를 격리한다.
 - **동기 분류:** 장애·회귀·폴백 사건, 설계·소유권 압력
 - **근거 판정:** **명시적** — [PR #103349](https://github.com/openclaw/openclaw/pull/103349)이 공유 볼트 문제와 에이전트별 실패 시 닫힘을 직접 설명한다.
 
@@ -352,7 +352,7 @@
 
 - **커밋:** [`4319ddbe8cb0`](https://github.com/openclaw/openclaw/commit/4319ddbe8cb08a49335eff22b82e3a7afe3d3201)
 - **최초 포함 태그:** `v2026.7.2-beta.1`
-- **해결하려 한 문제:** 다른 코딩 에이전트의 내구성 Markdown을 수동 복사 없이 검토·복구 가능한 방식으로 옮긴다.
+- **해결하려 한 문제:** 다른 코딩 에이전트의 영속 Markdown을 수동 복사 없이 검토·복구 가능한 방식으로 옮긴다.
 - **동기 분류:** 사용자·유지보수자 요청
 - **근거 판정:** **명시적** — [이슈 #106215](https://github.com/openclaw/openclaw/issues/106215)와 [PR #106406](https://github.com/openclaw/openclaw/pull/106406)이 수동 복사·충돌·백업 공백을 직접 연결한다.
 
@@ -380,7 +380,7 @@
 - **동기 분류:** 설계·소유권 압력
 - **근거 판정:** **명시적** — [PR #109636](https://github.com/openclaw/openclaw/pull/109636), [PR #110167](https://github.com/openclaw/openclaw/pull/110167), [PR #109427](https://github.com/openclaw/openclaw/pull/109427)이 각 파일 상태의 문제와 SQLite 소유자를 직접 밝힌다.
 
-### 2026-07-18 — 보호된 교차 대화 회상과 기본값
+### 2026-07-18 — 보호된 대화 간 회상과 기본값
 
 - **커밋:** [`4b3ee5e7eb62`](https://github.com/openclaw/openclaw/commit/4b3ee5e7eb623368d367a5fc2fa3712bc8095f16), [`01a9e1d398fd`](https://github.com/openclaw/openclaw/commit/01a9e1d398fd12970e936335811f13ee913e29c1)
 - **최초 포함 태그:** 보호된 회상은 `v2026.7.2-beta.3`, 조건부 기본값은 `v2026.7.2-beta.4`

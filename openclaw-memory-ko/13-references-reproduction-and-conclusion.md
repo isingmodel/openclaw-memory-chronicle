@@ -1,16 +1,16 @@
 # 13장. 출처와 재현 안내
 
-[← 이전: 이정표 색인](12-landmark-index.md) · [목차](README.md) · [다음: 용어집 →](14-glossary.md)
+[← 이전: 이정표 인덱스](12-landmark-index.md) · [목차](README.md) · [다음: 용어집 →](14-glossary.md)
 
 정본인 이 책의 주장을 독립적으로 확인하고 싶은 독자를 위한 장이다. OpenClaw 저장소, 공식 제품 문서, 고정된 외부 1차 자료, 역사를 재현하는 명령과 조사 한계를 한곳에 모았다. 공식 문서 링크는 배포 사이트의 절대 URL로 적었다.
 
-본문을 이해하는 데 이 목록을 먼저 읽을 필요는 없다. 다만 어떤 문장이 현재 계약인지, 출시된 동작인지, 과거 제안인지 의심스러울 때는 이 장과 [이정표 색인](12-landmark-index.md)으로 돌아오면 된다.
+본문을 이해하는 데 이 목록을 먼저 읽을 필요는 없다. 다만 어떤 문장이 현재 계약인지, 출시된 동작인지, 과거 제안인지 의심스러울 때는 이 장과 [이정표 인덱스](12-landmark-index.md)로 돌아오면 된다.
 
 ## 이 책이 말하는 “현재”
 
 - 저장소: [`openclaw/openclaw`](https://github.com/openclaw/openclaw)
 - 현재: OpenClaw `main`의 [`a115af277410`](https://github.com/openclaw/openclaw/tree/a115af277410a91fb039d2ed699eafad706f5c73), 2026-07-18. 본문에서 “현재”, “지금”, “오늘날”로 쓴 모든 서술은 이 시점의 상태를 뜻한다.
-- 근거 원칙: 코드·테스트·Git 이력으로 동작과 시점을 먼저 확정하고, 연결된 PR·이슈·릴리스·공식 문서와 외부 1차 자료로 동기와 계약을 교차 확인한다.
+- 근거 원칙: 코드·테스트·Git 이력으로 동작과 시점을 먼저 확정하고, 연결된 PR·이슈·출시·공식 문서와 외부 1차 자료로 동기와 계약을 교차 확인한다.
 
 ## 현재 공식 문서
 
@@ -26,14 +26,14 @@
 - [Memory Wiki](https://docs.openclaw.ai/plugins/memory-wiki)
 - [LanceDB 메모리 플러그인](https://docs.openclaw.ai/plugins/memory-lancedb)
 - [Honcho 메모리](https://docs.openclaw.ai/concepts/memory-honcho)
-- [2026.6.11 릴리스 노트](https://docs.openclaw.ai/releases/2026.6.11)와 [2026.7.1 릴리스 노트](https://docs.openclaw.ai/releases/2026.7.1)
+- [2026.6.11 출시 노트](https://docs.openclaw.ai/releases/2026.6.11)와 [2026.7.1 출시 노트](https://docs.openclaw.ai/releases/2026.7.1)
 
 ## 외부 1차 자료
 
 비교 대상은 이름이나 마케팅 설명이 아니라, 논문과 고정된 소스 리비전·데이터셋 카드·라이선스를 우선했다. 구조 비교에 사용한 변경 가능한 공식 개념 문서는 2026-07-26에 다시 확인했고, 평가에 실제로 넣을 코드와 데이터는 아래처럼 리비전과 체크섬을 별도로 고정했다.
 
 - [Hindsight 논문](https://arxiv.org/abs/2512.12818)과 [조사한 오픈 소스 리비전](https://github.com/vectorize-io/hindsight/tree/327aa05e80c89e2f02e9122123469f8b0bd91d0c)
-- Letta의 [메모리 블록](https://docs.letta.com/guides/core-concepts/memory/memory-blocks), [문맥 계층](https://docs.letta.com/guides/core-concepts/memory/context-hierarchy), [파일시스템 메모리 벤치마크 논의](https://www.letta.com/blog/benchmarking-ai-agent-memory/)
+- Letta의 [메모리 블록](https://docs.letta.com/guides/core-concepts/memory/memory-blocks), [컨텍스트 계층](https://docs.letta.com/guides/core-concepts/memory/context-hierarchy), [파일시스템 메모리 벤치마크 논의](https://www.letta.com/blog/benchmarking-ai-agent-memory/)
 - Mem0의 [메모리 유형과 범위](https://docs.mem0.ai/core-concepts/memory-types), [평가 개요](https://docs.mem0.ai/core-concepts/memory-evaluation)
 - Zep Graphiti의 [시간 지식 그래프 개요](https://help.getzep.com/graphiti/getting-started/overview), [그래프 구성 요소](https://help.getzep.com/graph-overview)
 - [SuCo 논문](https://arxiv.org/abs/2411.14754)
@@ -132,17 +132,17 @@ gh issue view <number> --repo openclaw/openclaw
 4. 외부 설명이 없으면 변경된 소유권·호출 순서·폴백·삭제된 경로가 허용하는 범위에서만 `코드에서 추론`한다. 저자의 심리나 제품 우선순위를 만들어 내지 않는다.
 5. 과거 제안과 나중 기능의 모양이 닮았더라도 후속 PR이 그 제안을 인용하지 않으면 `기능의 대응 관계`로만 적고 직접 인과라고 부르지 않는다.
 
-특히 폴백은 두 질문으로 나눴다. “현재 코드가 실패할 때 어디로 돌아가는가”는 코드와 테스트로 확인할 수 있는 계약이다. “어떤 실제 폴백 사건 때문에 이 코드가 생겼는가”는 연결된 이슈·PR·운영 기록이 있어야 말할 수 있는 역사적 동기다. [12장의 동기 열](12-landmark-index.md)은 이 원칙을 각 이정표에 적용한 요약이고, 2장부터 7장의 `변화의 동기` 문단은 그 근거와 구현 선택을 문맥 안에서 풀어 쓴다.
+특히 폴백은 두 질문으로 나눴다. “현재 코드가 실패할 때 어디로 돌아가는가”는 코드와 테스트로 확인할 수 있는 계약이다. “어떤 실제 폴백 사건 때문에 이 코드가 생겼는가”는 연결된 이슈·PR·운영 기록이 있어야 말할 수 있는 역사적 동기다. [12장의 동기 열](12-landmark-index.md)은 이 원칙을 각 이정표에 적용한 요약이고, 2장부터 7장의 `변화의 동기` 문단은 그 근거와 구현 선택을 맥락 안에서 풀어 쓴다.
 
 ## 조사 한계
 
 - 현재 SHA `a115af277410a91fb039d2ed699eafad706f5c73`의 조상인 커밋만 현재 역사로 취급했다. 중복 커밋이나 폐기된 브랜치 커밋은, 출시되지 않은 제안으로 명시한 경우를 제외하고 배제했다.
 - PR·이슈에 적힌 동기는 명시적 근거를 의역하는 데만 사용했다. 코드 모양에서 읽어 낸 의도는 추론이라고 표시했다.
 - 구버전을 대상으로 열린 보고서는 현재 소스에서 재현하지 않고 현재 결함으로 승격하지 않았다.
-- 최초 포함 태그 대응은 커밋 포함 관계와 태그 생성 순서를 사용하고 그 시점 뒤에 생성된 태그를 제외한다. 이는 릴리스 경계를 찾는 보조 수단이지 설치 현황 조사가 아니다.
+- 최초 포함 태그 대응은 커밋 포함 관계와 태그 생성 순서를 사용하고 그 시점 뒤에 생성된 태그를 제외한다. 이는 출시 경계를 찾는 보조 수단이지 설치 현황 조사가 아니다.
 - 이 저장소는 GitHub Discussions를 비활성화했으므로 검색할 토론 코퍼스가 없었다.
-- 이 역사를 한 번에 다룬 공식 회고 블로그는 없었다. 따라서 1차 커밋, PR·이슈, 문서·릴리스, 업스트림 자료를 우선했다.
-- 이 책은 문서 기반의 고고학 조사다. 조사 과정에서 런타임 동작을 바꾸거나 벤치마크 스위트를 실행하지 않았다.
+- 이 역사를 한 번에 다룬 공식 회고 블로그는 없었다. 따라서 1차 커밋, PR·이슈, 문서·출시, 업스트림 자료를 우선했다.
+- 이 책은 문서 기반의 고고학 조사다. 조사 과정에서 런타임 동작을 바꾸거나 벤치마크 묶음을 실행하지 않았다.
 
 ## 이 자료편의 역할
 
@@ -150,4 +150,4 @@ gh issue view <number> --repo openclaw/openclaw
 
 ---
 
-[← 이전: 이정표 색인](12-landmark-index.md) · [목차](README.md) · [다음: 용어집 →](14-glossary.md)
+[← 이전: 이정표 인덱스](12-landmark-index.md) · [목차](README.md) · [다음: 용어집 →](14-glossary.md)

@@ -52,7 +52,7 @@ OpenClaw의 메모리는 처음부터 벡터 데이터베이스나 독립된 모
 ## 판본과 범위
 
 - 저장소: [`openclaw/openclaw`](https://github.com/openclaw/openclaw)
-- 역사 조사 기준점: OpenClaw `main`의 [`a115af277410`](https://github.com/openclaw/openclaw/tree/a115af277410a91fb039d2ed699eafad706f5c73), 2026-07-18
+- 이 책의 “현재”: OpenClaw `main`의 [`a115af277410`](https://github.com/openclaw/openclaw/tree/a115af277410a91fb039d2ed699eafad706f5c73), 2026-07-18. 본문의 “현재”, “지금”, “오늘날”은 모두 이 시점을 가리킨다.
 - 언어: 한국어 본문, 영어 기술 식별자와 1차 자료 링크 유지
 - 완전성 목표: 역사, 현재 계약, 변화 동기, 수치, 예시, 참고문헌, 불확실성과 조사 한계를 이 책 안에서 자립적으로 설명
 - 상태 구분: 현재 `main`, 태그에 포함된 출시 상태, 과거 제안, 이 책의 권고를 서로 구분
@@ -63,7 +63,7 @@ OpenClaw의 메모리는 처음부터 벡터 데이터베이스나 독립된 모
 
 ### 1부. 지도를 먼저 펼치기
 
-먼저 이 책이 무엇을 메모리라고 부르는지 정하고, 조사 기준점의 전체 구조를 한 번에 본다.
+먼저 이 책이 무엇을 메모리라고 부르는지 정하고, 현재의 전체 구조를 한 번에 본다.
 
 - 0장. [프롤로그: OpenClaw 메모리를 읽는 법](00-prologue-and-method.md)
 - 1장. [한 문장은 어떻게 기억이 되는가](01-current-architecture.md)

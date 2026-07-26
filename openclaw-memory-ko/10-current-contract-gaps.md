@@ -2,9 +2,9 @@
 
 앞 장의 결과 추적은 기억 실패를 여러 단계로 나누었다. 그 언어를 실제 평가에 쓰려면 먼저 소스, 테스트, 문서가 같은 동작을 약속하는지 확인해야 한다. 계약이 흔들리는 상태에서 측정값만 정교해지면 무엇을 성공으로 볼지부터 어긋난다.
 
-2026-07-18 기준 `main`에는 문서와 런타임의 비공개 부트스트랩 불일치, Dreaming 저장소 문서의 노후화, 트랜스크립트 물질화의 별도 범위 경계가 있다. 이 판단은 오래된 이슈 설명을 옮긴 것이 아니라 기준점의 `main` 소스, 테스트, 문서를 대조한 결과다.
+2026-07-18 기준 `main`에는 문서와 런타임의 비공개 부트스트랩 불일치, Dreaming 저장소 문서의 노후화, 트랜스크립트 물질화의 별도 범위 경계가 있다. 이 판단은 오래된 이슈 설명을 옮긴 것이 아니라 현재 `main`의 소스, 테스트, 문서를 대조한 결과다.
 
-다만 이 장의 P0–P2는 역사적 프로젝트 분류나 링크된 이슈의 공식 우선순위 표지가 아니라, 확인된 위험을 어떤 순서로 다룰지에 관한 이 책의 제안이다. 뒤의 공개 이슈 목록도 기준점에서 재현된 현행 결함이 아니라 추가 검증을 기다리는 신호 백로그로 읽어야 한다.
+다만 이 장의 P0–P2는 역사적 프로젝트 분류나 링크된 이슈의 공식 우선순위 표지가 아니라, 확인된 위험을 어떤 순서로 다룰지에 관한 이 책의 제안이다. 뒤의 공개 이슈 목록도 현재 코드에서 재현된 결함이 아니라 추가 검증을 기다리는 신호 백로그로 읽어야 한다.
 
 [← 이전: 신호와 평가 전략](09-signal-ledger-and-evaluation.md) · [목차](README.md) · [다음: 벤치마크와 로드맵 →](11-benchmarks-and-roadmap.md)
 
@@ -51,7 +51,7 @@
 
 ## 확인된 간극 · 제안 우선순위 P0/P1: Dreaming 저장소 문서가 레거시 구현을 설명한다
 
-기준점의 [Dreaming 문서](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/concepts/dreaming.md#L17-L22), [메모리 개요](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/concepts/memory.md#L258-L280), [설정 참조](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/reference/memory-config.md#L793-L798)는 활성 상태가 `memory/.dreams/` 아래에 있다고 말한다. Dreaming 문서는 [`phase-signals.json`을 포함한 예전 배치](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/concepts/dreaming.md#L98-L106)도 제시한다.
+현재의 [Dreaming 문서](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/concepts/dreaming.md#L17-L22), [메모리 개요](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/concepts/memory.md#L258-L280), [설정 참조](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/reference/memory-config.md#L793-L798)는 활성 상태가 `memory/.dreams/` 아래에 있다고 말한다. Dreaming 문서는 [`phase-signals.json`을 포함한 예전 배치](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/concepts/dreaming.md#L98-L106)도 제시한다.
 
 하지만 [`3f5e00184431`](https://github.com/openclaw/openclaw/commit/3f5e00184431f10a7ae55c59ce8d3c6cb0d0a0eb) 이후 해당 기계 상태는 SQLite 플러그인 상태 이름공간에 있다. 현재 소유자는 [Dreaming 상태 어댑터](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/dreaming-state.ts#L1-L163)이며, 예전 JSON 경로는 doctor 마이그레이션 입력으로만 남는다.
 
@@ -71,7 +71,7 @@
 
 보호된 대화를 대상으로 하는 직접 `memory_search`는 신뢰된 회상의 소스를 대화 기록으로 제한한다. 백엔드가 후보를 순위화하고 상위 K개를 제한한 뒤, 각 결과를 에이전트, 비공개 대화 유형, 기준 대화, 현재 대화, 모든 별칭, 샌드박스 조건으로 검사한다. 이 검사는 인용·사용자 노출·Dreaming 회상 추적보다 먼저이지만 대화 기록 색인과 백엔드 순위화·제한보다 나중이다. 정식 순서는 [1장](01-current-architecture.md#canonical-session-authorization)에 있다.
 
-**물질화(materialization)**는 대화 기록 행의 일부를 다른 저장 형태의 산출물로 쓰는 일이다. 기준점에는 보호 검색과 다른 경계를 가진 두 포획 경로가 있다.
+**물질화(materialization)**는 대화 기록 행의 일부를 다른 저장 형태의 산출물로 쓰는 일이다. 지금은 보호 검색과 다른 경계를 가진 두 포획 경로가 있다.
 
 - 번들 `session-memory` 훅을 켜면 `/new` 또는 `/reset`이 제한된 대화 기록 꼬리를 일반 `memory/` 노트로 쓸 수 있다. 이 포획에는 대화 유형 관문이 없다.
 - Dreaming을 켜고 Light 또는 REM이 실행되면 해당 단계가 보호 검색의 비공개·그룹 필터를 거치지 않고 워크스페이스와 연결된 에이전트의 준비된 대화 기록 코퍼스를 직접 열거한다. 패턴으로 가린 세션 증거를 쓰고 승격 입력으로 사용할 수 있다. 별도로 문서화된 대화 기록 수집 전환 설정은 없다.
@@ -124,13 +124,13 @@ Markdown 밖에는 파생 색인, 회상 관찰, Dreaming 체크포인트, 대�
 
 ## 확인된 간극 · 제안 우선순위 P1: `main` 문서와 출시 동작의 시점이 잠시 어긋난다
 
-기준점의 설정 문서는 개인형 설치에서 `rememberAcrossConversations`가 기본으로 켜진다고 설명한다. 이 책이 조사한 기준점의 `main`에서는 맞는 말이다. 그러나 이를 켠 두 커밋은 기준점 당시 어떤 `v*` 태그에도 아직 포함되지 않았다.
+현재 설정 문서는 개인형 설치에서 `rememberAcrossConversations`가 기본으로 켜진다고 설명한다. 이 책이 조사한 `main`에서는 맞는 말이다. 그러나 이를 켠 두 커밋은 현재까지 어떤 `v*` 태그에도 포함되지 않았다.
 
 따라서 이전 릴리스의 실행 파일을 쓰면서 소스 문서를 읽는 운영자는 자신의 실행 파일에 없는 기본값을 볼 수 있다. 이 책은 호환성과 메모리 프라이버시에 민감한 설정에 릴리스 범위 문서 또는 눈에 띄는 버전 안내가 필요하다고 본다.
 
 ## 확인된 간극 · 제안 우선순위 P1: 리셋 포획에는 동등한 의미 플러시가 없다
 
-`session-memory` 훅은 `/new` 또는 `/reset`에서 길이가 제한된 대화 기록 꼬리를 보존한다. 반면 압축 전 플러시는 모델에게 오래 남길 정보를 선별하도록 요청한다. [이슈 #45608](https://github.com/openclaw/openclaw/issues/45608)이 기준점에서도 열린 이유는 두 동작이 동등하지 않기 때문이다.
+`session-memory` 훅은 `/new` 또는 `/reset`에서 길이가 제한된 대화 기록 꼬리를 보존한다. 반면 압축 전 플러시는 모델에게 오래 남길 정보를 선별하도록 요청한다. [이슈 #45608](https://github.com/openclaw/openclaw/issues/45608)이 지금도 열려 있는 이유는 두 동작이 동등하지 않기 때문이다.
 
 안전한 설계는 리셋 선별을 위해 추가 모델 호출과 지연을 감수할 가치가 있는지 결정해야 한다. 도입한다면 뒤에만 추가하기, 제한된 재시도, 주 응답을 막지 않기라는 조건을 함께 설계해야 한다.
 
@@ -162,7 +162,7 @@ Markdown 밖에는 파생 색인, 회상 관찰, Dreaming 체크포인트, 대�
 
 ## 공개 보고를 신호 백로그로 다루기
 
-다음 항목은 요청 또는 특정 버전에서 나온 보고다. 기준점에 대해 다시 재현하지 않은 항목은 확정된 현재 결함으로 취급하지 않는다.
+다음 항목은 요청 또는 특정 버전에서 나온 보고다. 현재 코드에 대해 다시 재현하지 않은 항목은 확정된 현재 결함으로 취급하지 않는다.
 
 | 보고                                                                                                                      | 미래 작업을 위한 신호                                                                                                                         |
 | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |

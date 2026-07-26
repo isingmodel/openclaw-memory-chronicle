@@ -74,7 +74,7 @@ OpenClaw에 필요한 것은 독자적인 벤치마크 세계를 새로 만드�
 
 - [LoCoMo](https://github.com/snap-research/locomo/tree/3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376)는 역사 비교에는 유용하지만 작고 CC BY-NC 4.0이다. 확인한 기본 브랜치 리비전의 마지막 업데이트는 2024-08-13이었다.
 - Mem0의 오래된 [OpenMemory UI/MCP 묶음](https://github.com/mem0ai/mem0/tree/ddaa655edf41e3ed375b263fb227da0bcd42ccb9/openmemory)에는 종료 예정 안내가 있다. 비교 백엔드가 필요할 때만 유지보수 중인 서버를 사용한다.
-- [MemBench](https://github.com/import-myself/Membench)와 공개 [MemoryArena](https://memoryarena.github.io/) 코드는 기준점에서 명확한 루트 코드 라이선스가 없었다. 분류 체계는 흥미롭지만 코드 재사용은 라이선스가 분명해질 때까지 기다린다. [MemoryArena 데이터셋](https://huggingface.co/datasets/ZexueHe/memoryarena) 자체는 CC BY 4.0이다.
+- [MemBench](https://github.com/import-myself/Membench)와 공개 [MemoryArena](https://memoryarena.github.io/) 코드는 현재까지 명확한 루트 코드 라이선스가 없다. 분류 체계는 흥미롭지만 코드 재사용은 라이선스가 분명해질 때까지 기다린다. [MemoryArena 데이터셋](https://huggingface.co/datasets/ZexueHe/memoryarena) 자체는 CC BY 4.0이다.
 
 ## 권고 도입 순서
 

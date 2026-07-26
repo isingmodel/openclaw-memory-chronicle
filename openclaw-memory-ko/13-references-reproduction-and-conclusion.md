@@ -30,10 +30,12 @@
 
 ## 외부 1차 자료
 
-비교 대상은 이름이나 마케팅 설명이 아니라, 논문과 고정된 소스 리비전·데이터셋 카드·라이선스를 우선했다.
+비교 대상은 이름이나 마케팅 설명이 아니라, 논문과 고정된 소스 리비전·데이터셋 카드·라이선스를 우선했다. 구조 비교에 사용한 변경 가능한 공식 개념 문서는 2026-07-26에 다시 확인했고, 평가에 실제로 넣을 코드와 데이터는 아래처럼 리비전과 체크섬을 별도로 고정했다.
 
 - [Hindsight 논문](https://arxiv.org/abs/2512.12818)과 [조사한 오픈 소스 리비전](https://github.com/vectorize-io/hindsight/tree/327aa05e80c89e2f02e9122123469f8b0bd91d0c)
-- Letta의 [메모리 블록](https://docs.letta.com/guides/core-concepts/memory/memory-blocks), [컨텍스트 계층](https://docs.letta.com/guides/core-concepts/memory/context-hierarchy), [파일시스템 메모리 벤치마크 논의](https://www.letta.com/blog/benchmarking-ai-agent-memory/)
+- Letta의 [메모리 블록](https://docs.letta.com/guides/core-concepts/memory/memory-blocks), [문맥 계층](https://docs.letta.com/guides/core-concepts/memory/context-hierarchy), [파일시스템 메모리 벤치마크 논의](https://www.letta.com/blog/benchmarking-ai-agent-memory/)
+- Mem0의 [메모리 유형과 범위](https://docs.mem0.ai/core-concepts/memory-types), [평가 개요](https://docs.mem0.ai/core-concepts/memory-evaluation)
+- Zep Graphiti의 [시간 지식 그래프 개요](https://help.getzep.com/graphiti/getting-started/overview), [그래프 구성 요소](https://help.getzep.com/graph-overview)
 - [SuCo 논문](https://arxiv.org/abs/2411.14754)
 - QMD의 [이름·역할·세 검색 명령](https://github.com/tobi/qmd/blob/e428df76bc0274d9e93eb7ca3e95673315c42e90/README.md#L1-L49)과 [당시 검색 파이프라인](https://github.com/tobi/qmd/blob/e428df76bc0274d9e93eb7ca3e95673315c42e90/README.md#L404-L491)
 - [sqlite-vec 소스와 계약](https://github.com/asg017/sqlite-vec/blob/04d28bd21773981e2d266bbf6aa4efbd011eb4f6/README.md#L5-L86)
@@ -48,18 +50,47 @@
 
 ## 평가 자산의 고정 리비전과 데이터 무결성 값
 
-다음 표는 acquisition manifest로 취급해야 한다. 이 책의 조사에서 Hugging Face 값은 인용한 revision에 게시된 LFS SHA-256 object ID를 repository metadata와 대조했다. 큰 dataset file을 모두 내려받아 독립적으로 다시 hash하지는 않았다. LoCoMo 값은 고정된 raw file에서 계산했고, LongMemEval-V2 값은 dataset이 공개한 checksum manifest를 인용했다.
+다음 목록은 평가 자산의 **획득 명세**다. Hugging Face 값은 인용한 리비전에 게시된 LFS SHA-256 객체 ID를 저장소 메타데이터와 대조했다. 큰 데이터셋 파일을 모두 내려받아 독립적으로 다시 해시하지는 않았다. LoCoMo 값은 고정된 원본 파일에서 계산했고, LongMemEval-V2 값은 데이터셋이 공개한 체크섬 명세를 인용했다.
 
-따라서 다운로드한 artifact를 benchmark run에 받아들이기 전에는 반드시 다시 hash해야 한다. 아래 값은 그 검증을 생략해도 된다는 뜻이 아니다.
+따라서 내려받은 산출물을 벤치마크 실행에 사용하기 전에는 반드시 다시 해시해야 한다. 아래 값은 그 검증을 생략해도 된다는 뜻이 아니다.
 
-| Dataset             | 고정 file/checksum                                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| LongMemEval cleaned | `longmemeval_s_cleaned.json d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`; `longmemeval_m_cleaned.json 9d79e5524794a2e6900a3aa9cb7d9152c5a3e8319c9a87c25494ba1eacee495f`; `longmemeval_oracle.json 821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c`                                                                                                |
-| MEME                | `meme_filler32k.json a88d28374a002b3e5b1683fb7201d06a1ce739d2ebf94c971c37bb65cf6ebdd3`; `meme_filler128k.json eb861f866dde067e6c7ea6db9bdf17b83a56cdc578dcca57d9d8809dc22747fe`; `meme_nofiller.json 1687d028cc1638986df9f58f0c3f072f614cf13d72a791541b4439fddf701636`                                                                                                                  |
-| MemoryAgentBench    | `Accurate_Retrieval 56c3cd80fb6731a3e53cd1a6be3148f54df60ff2d290ee50e28f8acebf9655c1`; `Conflict_Resolution 24d5c3f09ce0ce15625cb9f8a98f44f0d864ca6c94d7b4ad04eb697ca3a5ff45`; `Long_Range_Understanding 5ab175461954db67770d4a4cb69e569b513ebb96aceb9ee79b57f67488bcd539`; `Test_Time_Learning 5338753be48f925d03318eed66117286e3489025fabe050a547bd086cd7d79c0`                       |
-| BEAM                | `100K c0519be25907005ba873c927c50877471d550873039d96c041554d0075a78ace`; `500K af05921c979355038e1761b7cde3d2dd713200dd3071b278de0200f6c7f30122`; `1M 41b5acbbb55a586b1305514ef9d9fb03365d9b3331b598a1c2dd7603d93ef533`; `10M shard 0 31d96fd47ec56221d202e68792f26c00e49467dd4b36ee105c36ebd19ef78ad5`; `10M shard 1 a4f13fe25af51d57405ae41008689c31d1421377f3efde56a024b441deb2ee65` |
-| LongMemEval-V2      | 공개된 [`checksums.sha256`](https://huggingface.co/datasets/xiaowu0162/longmemeval-v2/blob/f152293e235517d504809563c833d7190b8c713b/checksums.sha256). 주요 파일: `questions.jsonl 0a3ae5ebea938c24d7800e1e0b0828e08ae1646f939a53853b2b8cdc08e292b7`, `trajectories.jsonl 363cec9a8e87aa8d9101ce4e600aadbf7031d674056ebe4f969e8424abc5f3c6`                                             |
-| LoCoMo              | `locomo10.json 79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4`                                                                                                                                                                                                                                                                                                        |
+**LongMemEval cleaned**
+
+- `longmemeval_s_cleaned.json` — `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`
+- `longmemeval_m_cleaned.json` — `9d79e5524794a2e6900a3aa9cb7d9152c5a3e8319c9a87c25494ba1eacee495f`
+- `longmemeval_oracle.json` — `821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c`
+
+**MEME**
+
+- `meme_filler32k.json` — `a88d28374a002b3e5b1683fb7201d06a1ce739d2ebf94c971c37bb65cf6ebdd3`
+- `meme_filler128k.json` — `eb861f866dde067e6c7ea6db9bdf17b83a56cdc578dcca57d9d8809dc22747fe`
+- `meme_nofiller.json` — `1687d028cc1638986df9f58f0c3f072f614cf13d72a791541b4439fddf701636`
+
+**MemoryAgentBench**
+
+- `Accurate_Retrieval` — `56c3cd80fb6731a3e53cd1a6be3148f54df60ff2d290ee50e28f8acebf9655c1`
+- `Conflict_Resolution` — `24d5c3f09ce0ce15625cb9f8a98f44f0d864ca6c94d7b4ad04eb697ca3a5ff45`
+- `Long_Range_Understanding` — `5ab175461954db67770d4a4cb69e569b513ebb96aceb9ee79b57f67488bcd539`
+- `Test_Time_Learning` — `5338753be48f925d03318eed66117286e3489025fabe050a547bd086cd7d79c0`
+
+**BEAM**
+
+- `100K` — `c0519be25907005ba873c927c50877471d550873039d96c041554d0075a78ace`
+- `500K` — `af05921c979355038e1761b7cde3d2dd713200dd3071b278de0200f6c7f30122`
+- `1M` — `41b5acbbb55a586b1305514ef9d9fb03365d9b3331b598a1c2dd7603d93ef533`
+- `10M shard 0` — `31d96fd47ec56221d202e68792f26c00e49467dd4b36ee105c36ebd19ef78ad5`
+- `10M shard 1` — `a4f13fe25af51d57405ae41008689c31d1421377f3efde56a024b441deb2ee65`
+
+**LongMemEval-V2**
+
+공개된 [`checksums.sha256`](https://huggingface.co/datasets/xiaowu0162/longmemeval-v2/blob/f152293e235517d504809563c833d7190b8c713b/checksums.sha256)를 기준으로 한다.
+
+- `questions.jsonl` — `0a3ae5ebea938c24d7800e1e0b0828e08ae1646f939a53853b2b8cdc08e292b7`
+- `trajectories.jsonl` — `363cec9a8e87aa8d9101ce4e600aadbf7031d674056ebe4f969e8424abc5f3c6`
+
+**LoCoMo**
+
+- `locomo10.json` — `79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4`
 
 이 표가 고정하는 것은 평가 결과가 아니라 입력의 정체다. 같은 이름의 데이터셋이라도 리비전과 체크섬이 다르면 같은 실험으로 비교할 수 없으며, 실제로 받은 파일의 해시 검증은 입수 단계에서 다시 수행해야 한다.
 

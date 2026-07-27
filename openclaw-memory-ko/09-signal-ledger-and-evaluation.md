@@ -170,12 +170,12 @@ flowchart LR
 OpenClaw에는 다음과 같은 초기 QA 평가 묶음이 있다.
 
 - [`memory-recall.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/memory-recall.yaml): 기억 요청, 컨텍스트 전환, 회상을 시험한다.
-- [`active-memory-preprompt-recall.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/active-memory-preprompt-recall.yaml): 선제 회상을 껐을 때와 켰을 때의 첫 사용자 표시 답변을 비교한다.
+- [`active-memory-preprompt-recall.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/active-memory-preprompt-recall.yaml): 선제 회상을 끈 세션에 플러그인 활동이 없고, 켠 세션의 첫 사용자 표시 답변이 회상된 선호를 쓰는지 확인한다.
 - [`session-memory-ranking.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/session-memory-ranking.yaml): 새 대화 기록 사실과 오래된 장기 의미 메모리를 경쟁시킨다.
 - [`remember-across-conversations.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/remember-across-conversations.yaml): 비공개 회상과 그룹·앵커·비활성화·일시 정지 제외를 시험한다.
 - [`thread-memory-isolation.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/thread-memory-isolation.yaml): 전달 목적지의 격리를 시험한다.
 - [`memory-failure-fallback.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/memory-failure-fallback.yaml): 도구를 사용할 수 없을 때 추측하지 않고 기권하는지 시험한다.
-- [`dreaming-shadow-trial-report.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/dreaming-shadow-trial-report.yaml): 실제 승격 없이 유용·중립·유해 후보를 비교한다.
+- [`dreaming-shadow-trial-report.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/dreaming-shadow-trial-report.yaml): 실제 승격 없이 기준선과 후보를 비교한 보고 전용 판정을 남긴다.
 
 이들을 고립된 시나리오로 두지 말고 같은 코퍼스를 다음 조합에서 재생하는 버전 고정 행렬로 확장할 수 있다.
 

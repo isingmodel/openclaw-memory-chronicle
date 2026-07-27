@@ -57,7 +57,7 @@
 
 파일 기반 산출물이 모두 사라진 것은 아니다. `.dreams/` 계열에는 다음 대화 기록 코퍼스 증거가 남고, 그 밖에도 이름이 정해진 파일 산출물이 있다.
 
-- 패턴으로 가린 `memory/.dreams/session-corpus/YYYY-MM-DD.txt` 증거는 예전 경로 형식으로 남아 있다.
+- 공백을 정규화하고 길이를 제한한 `memory/.dreams/session-corpus/YYYY-MM-DD.txt` 대화 기록 증거는 파일 산출물로 남아 있다.
 - 그 밖에 `DREAMS.md`, 단계·섀도 보고서, 크기가 제한된 공개 메모리 이벤트 내보내기가 이름 있는 파일 산출물로 남는다.
 - 내보내기 도구는 내부·생성 메시지 종류를 버리고 [등록된 비밀값과 패턴 기반 가림](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/logging/redact.ts#L1044-L1063)을 적용한다. 개인 내용을 일반적으로 익명화하는 것은 아니다.
 
@@ -74,7 +74,7 @@
 **구체화**(materialization)는 대화 기록 행의 일부를 다른 저장 형태의 산출물로 쓰는 일이다. 지금은 보호 검색과 다른 경계를 가진 두 포획 경로가 있다.
 
 - 번들 `session-memory` 훅을 켜면 `/new` 또는 `/reset`이 제한된 대화 기록 꼬리를 일반 `memory/` 노트로 쓸 수 있다. 이 포획에는 대화 유형 관문이 없다.
-- Dreaming을 켜고 Light 또는 REM이 실행되면 해당 단계가 보호 검색의 비공개·그룹 필터를 거치지 않고 워크스페이스와 연결된 에이전트의 준비된 대화 기록 코퍼스를 직접 열거한다. 패턴으로 가린 세션 증거를 쓰고 승격 입력으로 사용할 수 있다. 별도로 문서화된 대화 기록 수집 전환 설정은 없다.
+- Dreaming을 켜고 Light 또는 REM이 실행되면 해당 단계가 보호 검색의 비공개·그룹 필터를 거치지 않고 워크스페이스와 연결된 에이전트의 준비된 대화 기록 코퍼스를 직접 열거한다. 공백을 정규화하고 길이를 제한한 세션 증거를 쓰고 승격 입력으로 사용할 수 있다. 별도로 문서화된 대화 기록 수집 전환 설정은 없다.
 
 ### 현재 흐름과 제안하는 안전 흐름
 
@@ -87,7 +87,7 @@ flowchart LR
         I --> R[나중 검색<br/>source=sessions 권한 검사 적용 안 됨]
 
         T1 --> D[Dreaming Light·REM 직접 열거<br/>보호 검색 필터 적용 안 됨]
-        D --> E[패턴으로 가린 session-corpus 증거]
+        D --> E[정규화·길이 제한 session-corpus 증거]
         E --> P[승격 입력 가능]
     end
 
@@ -168,9 +168,9 @@ Markdown 밖에는 파생 인덱스, 회상 관찰, Dreaming 체크포인트, �
 
 현재 표면은 하나의 상호 교환 가능한 “공급자” 추상화가 아니다. 구성 요소별 현재 위치는 [1장의 소유권 기준표](01-current-architecture.md#canonical-component-ownership)에 모아 두었다.
 
-1. `memory-core`와 `memory-lancedb`는 배타적 메모리 플러그인 슬롯을 소유할 수 있다.
+1. `memory-core`, `memory-lancedb`, 외부 `openclaw-honcho`는 배타적 메모리 플러그인 슬롯을 소유할 수 있다.
 2. 내장 SQLite/FTS/벡터 검색과 QMD는 `memory-core` 내부 백엔드다.
-3. Memory Wiki와 외부 Honcho는 슬롯을 소유하지 않고 프롬프트, 코퍼스, 회상을 보충하는 추가형 플러그인이다.
+3. Memory Wiki는 슬롯을 소유하지 않고 프롬프트·코퍼스를 보충하는 추가형 플러그인이다.
 
 이 계층 사이에서 플러그인과 백엔드는 다음 계약이 다르다.
 

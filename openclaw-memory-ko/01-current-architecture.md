@@ -357,6 +357,10 @@ Active Memory의 보호 호출         = corpus "sessions"
 
 여기서 `"configured"`는 `memory_search`에 넘기는 공개 `corpus` 값이 아니라, Active Memory 런타임이 도구의 유효 검색 소스를 고르는 **내부 `conversationRecall` 모드**다. 또한 고급 `toolsAllow`에는 `memory_get`, `sessions_search`, 또는 다른 등록 회상 도구를 명시할 수 있다. 이때 `sessions_search`는 보호된 세션 의미 검색으로 변하지 않고, 앞 절의 정확 FTS와 일반 세션 도구 가시성을 그대로 사용한다. 다만 `sessions_history`는 Active Memory의 예약 도구라 허용 목록에 추가할 수 없다. 따라서 고급 보조 실행은 `sessions_search`의 발췌를 요약할 수는 있어도, 주 모델처럼 세 앵커로 주변 이력을 이어 읽지는 못한다. [고급 허용 목록 정규화](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/config.ts#L105-L133), [예약 도구 목록](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/types.ts#L56-L88), [허용 도구 결과 판독](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/transcript.ts#L337-L430)을 보라.
 
+여기서 **보조 실행 한 번**은 **검색 도구 한 번**을 뜻하지 않는다. Active Memory는 정해진 검색 호출을 감싸는 단순 함수가 아니라, `runEmbeddedAgent`로 제한된 검색 에이전트 실행 하나를 시작한다. 보조 모델은 `toolsAllow` 안에서 호출할 도구와 인자를 고르고, 결과를 본 뒤 같은 도구를 다른 표현이나 제한값으로 다시 호출하거나 다른 허용 도구로 이어 갈 수 있다. 제품 기본 경로에서는 허용 도구가 `memory_search` 하나로 좁아지므로 다른 종류의 도구로 넓어지지는 않지만, `memory_search`를 반드시 한 번만 호출하도록 고정하지도 않는다.
+
+그렇다고 재표현 검색이 항상 일어나는 것은 아니다. 검색용 질의는 고정된 도구 인자로 복사되지 않고 `Bounded memory search query`라는 프롬프트 입력으로 보조 모델에 전달된다. 기본 프롬프트는 이 질의를 기준으로 허용 도구를 쓰고, 선호·습관을 찾을 때는 빈 결과로 결론 내리기 전에 검색 상한이나 임계값을 느슨하게 적용하라고 지시한다. 그러나 일반적인 0건 결과마다 동의어로 다시 검색하라는 절차까지 명시하지는 않는다. 런타임도 첫 `memory_search`가 0건이라는 이유만으로 보조 실행을 즉시 끝내지 않아 후속 호출의 여지를 남긴다. 따라서 Active Memory는 **제한된 도구와 시간 안에서 움직이는 agentic retrieval loop**이지만, 재검색과 질의 재표현은 가능한 전략이지 매번 실행되는 보장된 단계는 아니다. [보조 모델의 검색 프롬프트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/prompt.ts#L66-L137), [제한된 임베디드 실행](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L252-L319), [0건 결과를 즉시 종료하지 않는 테스트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.test.ts#L4541-L4584)가 이 경계를 보여 준다.
+
 다만 설정의 기본값이 `true`가 될 수 있다는 사실만으로 회상이 실행되는 것은 아니다. 다음 조건을 모두 통과해야 한다.
 
 - `active-memory` 플러그인이 활성화되어 있어야 한다.
@@ -364,7 +368,7 @@ Active Memory의 보호 호출         = corpus "sessions"
 - 세션에서 `/active-memory off`로 끄지 않았어야 한다.
 - 제품 기본 경로라면 `memory_search`가 허용 도구에 있고, 선택된 메모리 슬롯이 정확히 `memory-core`여야 한다. 고급 경로만 실행할 때는 운영자가 구성한 허용 도구가 기준이다.
 
-조건을 모두 통과하면 Active Memory는 자격을 갖춘 비공개 답변을 만들기 전, 검색 전용으로 제한된 보조 실행을 한 번 수행한다. 관련 결과가 있으면 숨은 컨텍스트 요약을 주 모델 앞에 붙이고, 결과가 없거나 검색이 불가능하거나 시간 제한을 넘으면 원래 답변을 계속한다. 이 경로는 자체 장기 기억을 쓰지 않는다. [개인용 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/config-utils.ts#L177-L200), [실행 자격·코퍼스 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.ts#L350-L430), [보조 실행과 결과 판독](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L270-L319)에 근거한다.
+조건을 모두 통과하면 Active Memory는 자격을 갖춘 비공개 답변을 만들기 전, 검색 전용으로 제한된 보조 에이전트 실행 하나를 시작한다. 관련 결과가 있으면 숨은 컨텍스트 요약을 주 모델 앞에 붙이고, 결과가 없거나 검색이 불가능하거나 시간 제한을 넘으면 원래 답변을 계속한다. 이 경로는 자체 장기 기억을 쓰지 않는다. [개인용 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/config-utils.ts#L177-L200), [실행 자격·코퍼스 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.ts#L350-L430), [보조 실행과 결과 판독](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L270-L319)에 근거한다.
 
 보호 범위는 일반 세션 도구 가시성보다 좁다. 목적지와 후보 모두 세션 메타데이터와 모든 별칭으로 비공개라고 확인되어야 한다.
 

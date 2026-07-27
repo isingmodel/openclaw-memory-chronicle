@@ -18,6 +18,7 @@ OpenClaw의 정상적인 사용자·어시스턴트 메시지는 대화 기록�
 ## 이 장의 지도
 
 - [다섯 상태](#먼저-구분해야-할-다섯-상태)에서 현재 컨텍스트와 네 저장 계층을 구분한다.
+- [두 검색 도구와 한 자동 회상 계층](#혼동-방지-두-검색-도구와-한-자동-회상-계층)에서 `memory_search`, `sessions_search`, Active Memory의 역할을 먼저 고정한다.
 - [`ORBIT-10`의 생애](#orbit-10-한-대화를-끝까지-따라가기)를 따라 대화 기록, 컴팩션, 의미 메모리 포획을 본다.
 - [다음 대화가 과거를 읽는 다섯 길](#다음-대화가-과거를-읽는-다섯-길)에서 부트스트랩·도구·Active Memory·대화 검색을 비교한다.
 - [선택 기능의 위치](#선택-기능은-어느-단계를-바꾸는가)와 [QMD](#qmd-explained)의 역할을 기본 경로와 분리한다.
@@ -42,6 +43,18 @@ OpenClaw의 정상적인 사용자·어시스턴트 메시지는 대화 기록�
 여기서 SQLite가 두 번 등장한다고 해서 두 상태가 같지는 않다. 정식 대화 행은 원본이고, 그 옆의 FTS·벡터 테이블은 찾기 위한 파생 상태다. 반대로 Markdown은 “모든 런타임 상태”의 원본이 아니라 **사람이 읽고 고칠 수 있는 의미 메모리**의 원본이다. 정식 세션·대화 기록은 SQLite가 소유하고, 기본 `memory-core` 내장 경로의 인덱스와 기계 상태도 SQLite에 둔다. QMD·LanceDB 같은 대체 백엔드는 뒤에서 보듯 자기 저장소를 쓸 수 있다.
 
 표를 읽는 데 필요한 용어만 먼저 정해 두자. 이 장에서 **에이전트**(agent)는 자기 워크스페이스와 에이전트별 DB를 가진 실행 주체이고, **워크스페이스**(workspace)는 사람이 편집할 수 있는 기억 파일이 놓이는 공간이다. **세션 키**(session key)는 대화가 속한 논리적 통로의 라우팅 이름이며, **세션 ID**(session ID)는 리셋과 리셋 사이의 구체적인 대화 구간을 가리킨다. 하나의 세션 키가 `/reset` 뒤 새 세션 ID를 가리킬 수 있는 이유가 여기에 있다. 검색에 쓰이는 용어는 실제로 검색을 다루는 [뒷절](#벡터는-기억이-아니라-찾아보기다)에서 꺼낸다.
+
+### 혼동 방지: 두 검색 도구와 한 자동 회상 계층
+
+`memory_search`와 `sessions_search`는 **모델이 호출할 수 있는 서로 다른 검색 도구**다. Active Memory는 그 둘과 나란한 세 번째 검색 도구가 아니라, **주 답변 전에 별도 보조 실행을 띄워 허용된 메모리 도구를 대신 호출하고 결과를 짧게 요약해 넣는 플러그인**이다.
+
+| 개념                            | 정체                      | 무엇을 검색하는가                                                                                                                                                                                                                | 결과가 답변에 들어오는 방식                                                                           |
+| ------------------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `memory_search`                 | `memory-core`의 검색 도구 | 기본은 `MEMORY.md`, `memory/**/*.md`, 추가 경로의 청크다. 설정과 권한이 허용하면 별도 `source=sessions` 의미 인덱스도 검색한다.                                                                                                  | 주 모델이 필요할 때 직접 호출하거나, Active Memory의 보조 실행이 답변 전에 호출한다.                  |
+| `sessions_search`               | 세션 도구의 검색 도구     | 호출자가 볼 수 있는 정식 SQLite 대화 기록의 사용자·어시스턴트 텍스트를 정확 FTS로 검색한다.                                                                                                                                      | 세션·메시지 앵커를 돌려주며, 주변 원문은 이어서 `sessions_history`로 읽는다.                          |
+| Active Memory (`active-memory`) | 답변 전 회상 플러그인     | 자체 코퍼스나 인덱스가 없다. `memory-core` 경로의 기본 허용 목록은 `memory_search`·`memory_get`이다. 제품 기본 경로만 단독으로 실행될 때는 `memory_search` 하나로 좁히고, 고급 경로가 함께 켜지면 운영자의 허용 목록을 유지한다. | 관련 결과를 제한된 길이의 숨은 요약으로 만들어 주 모델 컨텍스트 앞에 붙인다. 의미 원본은 쓰지 않는다. |
+
+이름이 비슷한 두 플러그인도 분리해야 한다. `memory-core`는 `memory_search`·`memory_get`과 검색 백엔드를 소유하는 **메모리 슬롯 플러그인**이고, `active-memory`는 그 도구들을 **언제 자동으로 부를지**를 소유하는 별도 플러그인이다. 주 프롬프트에 붙는 `<active_memory_plugin>` 태그도 새 저장소나 검색 표면의 이름이 아니라, Active Memory가 만든 숨은 컨텍스트를 감싸는 표시일 뿐이다. [일반·신뢰된 코퍼스 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/tools.ts#L622-L657), [Active Memory 실행 자격과 코퍼스](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.ts#L350-L430), [기본 허용 도구](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/types.ts#L24-L31), [보조 실행의 도구 제한](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L270-L319), [숨은 컨텍스트 래퍼](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/prompt.ts#L290-L308)가 이 경계를 고정한다.
 
 > **보안 범위 주의:** 아래에서 `MEMORY.md`가 “일반 세션 부트스트랩”에 들어간다고 쓰는 것은 현재의 실제 코드 동작이다. 공식 문서는 main/private 대화만을 의도하지만 현재 필터는 그 범위를 완전히 강제하지 않는다. 장 끝의 [계약 주의점](#현재-계약에서-독자가-알아야-할-주의점)에서 코드와 문서의 차이를 함께 설명한다.
 
@@ -199,6 +212,8 @@ ORBIT-10 예제로 두 검색 방식을 갈라 보자.
 
 FTS는 `ORBIT-10`, `Mina`, `E_DEPLOY_413`처럼 철자가 보존된 표현에 강하다. 벡터 검색은 “배포 전에 누가 사인오프하지?”처럼 원문과 단어가 달라도 의미가 비슷한 질문을 찾는 데 유리하다. 하이브리드 검색은 둘의 후보를 합쳐 정확한 식별자와 바꿔 말한 질문을 함께 처리한다.
 
+여기서 **FTS라는 기술 이름이 같다고 같은 검색 도구나 같은 인덱스인 것은 아니다.** `memory_search`의 FTS/BM25는 의미 메모리 청크와 허용된 선택 코퍼스를 대상으로 벡터 후보와 결합될 수 있다. `sessions_search`는 별도의 `session_transcript_fts`에서 정식 대화 텍스트를 정확 검색한다. 전자는 “관련된 메모리 청크”, 후자는 “그 문자열이 등장한 대화 위치”를 찾는 API다.
+
 기본 내장 엔진은 문서를 400토큰 청크로 자르고 80토큰을 겹친다. 임베딩을 사용할 수 있으면 기본 가중치 벡터 `0.7`, 텍스트 `0.3`, 후보 배수 `4`로 결합하며 최대 6개, 최소 점수 `0.35`를 사용한다. MMR과 시간 감쇠는 기본 비활성이다. 이 값은 [검색 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/memory-search.ts#L123-L143)에 모여 있다.
 
 내장 엔진의 FTS·벡터 인덱스는 에이전트별 정식 `openclaw-agent.sqlite` 안의 메모리 소유 테이블에 저장된다. 전용 “장기 기억 DB”로 Markdown을 옮기는 것이 아니다. 파일 감시와 검색 시 동기화가 원본 변경을 인덱스에 반영하고, 공급자·모델·청크 설정이 바뀌어 인덱스 정체성이 맞지 않으면 자동으로 모든 내용을 다시 임베딩하지 않고 인덱스를 일시 중지해 재생성을 요구한다.
@@ -213,13 +228,13 @@ FTS는 `ORBIT-10`, `Mina`, `E_DEPLOY_413`처럼 철자가 보존된 표현에 �
 
 며칠 뒤 다른 대화에서 사용자가 다시 묻는다고 하자. 질문의 모양과 저장 상태에 따라 올바른 경로가 달라진다.
 
-| 질문과 의도                                           | 우선 경로                                                          | 찾는 원본                                          | 의미 메모리로 승격되는가                              |
-| ----------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------- | ----------------------------------------------------- |
-| 같은 세션에서 “승인자는?”                             | 현재 대화 이력 또는 컴팩션 요약·최근 꼬리                          | SQLite 대화 기록                                   | 아니요. 같은 세션 연속성이다.                         |
-| “오래 유지하는 ORBIT-10 규칙은?”                      | `MEMORY.md` 부트스트랩 또는 `memory_search`                        | 정제된 장기 Markdown                               | 이미 의미 메모리다.                                   |
-| “배포 전에 누가 사인오프하지?”                        | `memory_search` 하이브리드 검색                                    | Markdown, 또는 허용·설정된 `source=sessions`       | 검색만으로 승격되지는 않는다.                         |
-| “`E_DEPLOY_413`라고 말한 대화를 찾아 줘”              | `sessions_search`, 이어서 검색 결과의 세 앵커로 `sessions_history` | 정식 SQLite 대화 기록과 정확 FTS                   | 아니요. 원래 대화의 출처를 유지한다.                  |
-| 개인용 비공개 대화에서 “지난번 배포 얘기를 이어 가자” | 보호된 Active Memory 대화 간 회상                                  | 같은 에이전트의 다른 비공개라고 확인된 대화 인덱스 | 아니요. 답변 전 모델 컨텍스트에 제한된 요약만 더한다. |
+| 질문과 의도                                           | 우선 경로                                                                         | 찾는 원본                                           | 의미 메모리로 승격되는가                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| 같은 세션에서 “승인자는?”                             | 현재 대화 이력 또는 컴팩션 요약·최근 꼬리                                         | SQLite 대화 기록                                    | 아니요. 같은 세션 연속성이다.                         |
+| “오래 유지하는 ORBIT-10 규칙은?”                      | `MEMORY.md` 부트스트랩 또는 `memory_search(corpus=memory)`                        | 정제된 장기 Markdown                                | 이미 의미 메모리다.                                   |
+| “배포 전에 누가 사인오프하지?”                        | `memory_search`; 설정·권한이 있을 때만 세션 코퍼스도 검색                         | Markdown, 또는 허용·설정된 `source=sessions` 인덱스 | 검색만으로 승격되지는 않는다.                         |
+| “`E_DEPLOY_413`라고 말한 대화를 찾아 줘”              | `sessions_search`, 이어서 검색 결과의 세 앵커로 `sessions_history`                | 정식 SQLite 대화 기록과 정확 FTS                    | 아니요. 원래 대화의 출처를 유지한다.                  |
+| 개인용 비공개 대화에서 “지난번 배포 얘기를 이어 가자” | Active Memory가 답변 전에 보호된 `memory_search(corpus=sessions)`를 호출하고 요약 | 같은 에이전트의 다른 비공개라고 확인된 대화 인덱스  | 아니요. 답변 전 모델 컨텍스트에 제한된 요약만 더한다. |
 
 저장 도식에서 갈라졌던 원본은 다음 대화에서 아래처럼 돌아온다. 노랑은 이번 답변의 `[현재 컨텍스트]`, 파랑은 파생 인덱스나 읽기 동작이다. Markdown 검색 인덱스 `source=memory`와 대화 의미 인덱스 `source=sessions`를 별도 노드로 둔 이유는 둘의 원본과 권한이 다르기 때문이다.
 
@@ -237,21 +252,37 @@ flowchart TB
 
     MD --> MIDX[("[파생] Markdown 인덱스<br/>source=memory")]
     LONG --> MIDX
-    MIDX --> MS["memory_search"]
     MD --> MG["memory_get<br/>경로·줄 원문 읽기"]
     LONG --> MG
-    MS --> CTX
     MG --> CTX
 
     TR --> EF[("[파생] 정확 대화 FTS")]
-    EF --> SS["sessions_search"]
-    SS -->|"sessionKey + messageId + sessionId"| SH["sessions_history<br/>검색 지점 주변 읽기"]
+    EF --> SSM["sessions_search<br/>주 모델 직접 호출"]
+    SSM -->|"검색 결과"| CTX
+    SSM -->|"필요하면 세 앵커로 후속 호출"| SH["sessions_history<br/>검색 지점 주변 읽기"]
     SH --> CTX
 
     TR -.->|"rememberAcross 또는<br/>명시적 세션 소스"| SIDX[("[조건부 파생] 대화 의미 인덱스<br/>source=sessions")]
-    SIDX --> SR["Active Memory 또는<br/>명시적 세션 의미 검색"]
+    MIDX --> MS["memory_search<br/>요청 corpus를 권한 안에서 해석"]
+    SIDX --> MS
+    MS --> MR["source=memory 결과"]
+    MS --> SR["source=sessions 결과"]
+    MR -->|"주 모델의 직접 도구 결과"| CTX
     SR --> AUTH["결과별 세션 권한 검사"]
-    AUTH --> CTX
+    AUTH -->|"명시적으로 허용된<br/>주 모델의 직접 도구 결과"| CTX
+
+    AM["Active Memory<br/>답변 전 보조 실행"]
+    AM -.->|"허용된 memory_search 호출"| MS
+    AM -.->|"기본 memory-core 허용 도구"| MG
+    EF -.-> SSA["sessions_search<br/>Active Memory 고급 호출"]
+    AM -.->|"고급 toolsAllow에서<br/>명시한 경우"| SSA
+    AM -.->|"고급 toolsAllow의<br/>다른 등록 도구"| OTHER["기타 허용 도구의 결과"]
+    MR -.->|"보조 실행이 받은 결과"| AMS["제한된 숨은 회상 요약"]
+    AUTH -.->|"보조 실행이 받은<br/>허용된 세션 결과"| AMS
+    MG -.->|"보조 실행이 읽은 원문"| AMS
+    SSA -.->|"sessions_history 없이<br/>검색 결과만 요약"| AMS
+    OTHER -.-> AMS
+    AMS --> CTX
 
     classDef transcript fill:#eeeeee,stroke:#424242,color:#111
     classDef durable fill:#e8f5e9,stroke:#2e7d32,color:#111
@@ -259,7 +290,7 @@ flowchart TB
     classDef context fill:#fff8e1,stroke:#f9a825,color:#111
     class TR transcript
     class MD,LONG durable
-    class REPLAY,MIDX,MS,MG,EF,SS,SH,SIDX,SR,AUTH derived
+    class REPLAY,MIDX,MS,MR,SR,MG,EF,SSM,SSA,SH,SIDX,AUTH,AM,OTHER,AMS derived
     class CTX context
 ```
 
@@ -275,17 +306,37 @@ flowchart TB
 
 대화 기록 쪽 화살표는 정확 검색과 의미 검색으로 갈린다.
 
-`sessions_search`는 SQLite 대화 FTS를 직접 검색한다. 가시 세션의 결과를 먼저 모은 뒤 결과 개수·발췌 길이·전체 바이트 상한을 적용한다. 주변 컨텍스트를 열 때는 반환된 `sessionKey`, `messageId`, `sessionId`를 함께 `sessions_history`에 넘겨야 한다. `sessionId`는 `messageId` 없이 쓸 수 없다. 정확한 오류 코드·식별자·인용문과 그 주변을 안전하게 잇는 경로다. [검색 결과의 세 앵커](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/tools/sessions-search-tool.ts#L40-L57), [히스토리 앵커 계약](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/tools/sessions-history-tool.ts#L39-L46), [가시성 우선 순서](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/tools/sessions-search-tool.ts#L445-L511)를 보라.
+#### `sessions_search`: 정식 대화 원문을 정확 검색
+
+`sessions_search`는 SQLite 대화 FTS를 직접 검색한다. 질의 토큰을 각각 인용해 `AND`로 묶으므로, 여러 단어를 주면 모두 들어 있는 대화 위치를 찾는 정확 검색에 가깝다. 가시 세션의 결과를 먼저 모은 뒤 결과 개수·발췌 길이·전체 바이트 상한을 적용한다. 주변 컨텍스트를 열 때는 반환된 `sessionKey`, `messageId`, `sessionId`를 함께 `sessions_history`에 넘겨야 한다. `sessionId`는 `messageId` 없이 쓸 수 없다. 정확한 오류 코드·식별자·인용문과 그 주변을 안전하게 잇는 경로다. [FTS 질의 구성](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/config/sessions/session-transcript-search.ts#L33-L39), [검색 결과의 세 앵커](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/tools/sessions-search-tool.ts#L40-L57), [히스토리 앵커 계약](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/tools/sessions-history-tool.ts#L39-L46), [가시성 우선 순서](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/tools/sessions-search-tool.ts#L445-L511)를 보라.
+
+#### `memory_search`: 의미 메모리와 허용된 코퍼스를 검색
 
 `memory_search`는 일반적으로 Markdown `source=memory`를 검색한다. 세션 대화 기록도 의미 검색용 `source=sessions`로 인덱싱할 수 있지만, **인덱스 대상**과 **일반 도구가 검색할 수 있는 대상**은 별도다. 개인용 기본값인 `rememberAcrossConversations`는 보호된 회상을 위해 세션을 인덱싱하면서도, 일반 모델의 `memory_search`는 기본적으로 Markdown만 검색하게 둔다. 신뢰된 Active Memory 런타임 또는 명시적으로 구성한 세션 검색만 대화 코퍼스를 요청할 수 있다. 이 분리는 [인덱스 `sources`와 도구 `searchSources`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/memory-search.ts#L298-L307), [신뢰된 코퍼스 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/tools.ts#L622-L657)에 구현되어 있다.
+
+표기까지 구분하면 더 선명하다. `corpus`는 `memory_search` 호출이 요청하는 검색 범위이고, `source`는 인덱스나 결과가 어느 원본 계열에서 왔는지 나타낸다. 따라서 호출 표기는 `memory_search(corpus=sessions)`, 그 결과의 출처 표기는 `source=sessions`다. 공개 도구가 받는 `corpus` 값은 `memory`, `wiki`, `all`, `sessions`뿐이다. 모델이 쓴 값은 요청일 뿐이며 런타임 권한을 넘지 못한다. [공개 `memory_search` 스키마](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/tools.shared.ts#L32-L37)를 보라.
+
+개인용 기본값에서 `rememberAcrossConversations: true`만 켠 상태를 의사 설정으로 쓰면 다음과 같다.
+
+```text
+색인 대상 sources                 = ["memory", "sessions"]
+일반 memory_search의 searchSources = ["memory"]
+Active Memory의 보호 호출         = corpus "sessions"
+```
+
+따라서 일반 모델이 도구 매개변수로 `corpus=sessions`나 `corpus=all`을 써도 권한이 새로 생기지 않는다. 런타임이 허용 대상을 다시 `searchSources`로 좁힌다. 일반 모델의 세션 의미 검색을 명시적으로 열려면 세션 인덱싱을 활성화하고 `sources`에 `"sessions"`를 포함해 `searchSources`에도 남도록 구성해야 한다. `rememberAcrossConversations` 없이 여는 고급 경로에서는 `experimental.sessionMemory: true`도 필요하다. [기본값과 명시적 세션 검색 테스트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/agents/memory-search.test.ts#L300-L338)가 두 경우를 대조한다.
 
 두 대화 인덱스의 갱신 시점도 다르다. 정확한 `session_transcript_fts`는 현재 활성 분기를 모호함 없이 연장하는 메시지 추가와 같은 트랜잭션에서 갱신되므로 방금 기록된 발화를 즉시 찾는 경로다. 반면 `source=sessions` 의미 인덱스는 `memory-core`가 커밋 뒤 변경 알림을 받아 5초 동안 묶고 재인덱싱하는 파생 경로라 잠시 뒤처질 수 있다. 시작 시 누락분 따라잡기와 분기 변경 재조정도 비동기다. [세션 의미 인덱스 동기화](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/memory/manager-session-sync-ops.ts#L37-L39)와 [디바운스 처리](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/memory/manager-session-sync-ops.ts#L191-L205)를 보라. “정확한 최신 발화”와 “뜻이 비슷한 과거 대화”가 서로 다른 도구인 이유가 여기에 있다.
 
 또 하나의 중요한 제한이 있다. `memory_get`은 일반 Markdown·Wiki 원문을 읽는 도구이지, 내장 세션 인덱스 결과를 여는 도구가 아니다. 대화 주변은 `sessions_history`로 읽는다. QMD도 `rememberAcrossConversations` 때문에 내부적으로 만든 비공개 세션 내보내기는 일반 `memory_get`에 노출하지 않으며, 사용자가 세션 내보내기를 명시적으로 켠 경우에만 읽을 수 있다. [QMD 세션 읽기 설정](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/backend-config.ts#L314-L333)이 이 경계를 고정한다.
 
-## 개인용 기본값의 보호된 대화 간 회상
+<a id="개인용-기본값의-보호된-대화-간-회상"></a>
 
-다섯 길의 마지막 행, 즉 다른 비공개 대화를 되짚는 경로만은 성격이 다르다. 모델이 도구를 호출해 얻는 결과가 아니라, 답변을 만들기 전에 런타임이 먼저 실행하는 회상이기 때문이다. **Active Memory 플러그인 자체는 선택 기능**이다. 다만 플러그인이 활성화된 설치에서는 `rememberAcrossConversations` 설정이 개인용 구성에서 기본으로 켜질 수 있다. 플러그인을 사용할지와 플러그인 안의 제품 경로가 어떤 기본값을 갖는지는 별개의 결정이다.
+## Active Memory는 세 번째 검색기가 아니다
+
+다섯 길의 마지막 행, 즉 다른 비공개 대화를 되짚는 경로만은 성격이 다르다. Active Memory가 새 검색 API를 제공해서가 아니라, 답변을 만들기 전에 **별도 보조 실행이 기존 `memory_search`를 호출**하기 때문이다. 보조 실행은 검색 결과가 유용하면 `NONE` 대신 짧은 요약 하나를 반환하고, 런타임은 그 요약을 `<active_memory_plugin>` 숨은 컨텍스트로 주 모델 앞에 붙인다. Active Memory는 자체 코퍼스·FTS·벡터 인덱스를 소유하지 않는다. 제품 기본 경로만 단독으로 실행될 때는 `memory_search` 하나만 허용하므로 `sessions_search`를 대신 호출하지도 않는다. 고급 경로에서는 운영자가 다른 등록 도구를 명시적으로 허용할 수 있지만, 그 도구의 검색 의미와 권한은 그대로 유지된다.
+
+**Active Memory 플러그인 자체는 선택 기능**이다. 다만 플러그인이 활성화된 설치에서는 `rememberAcrossConversations` 설정이 개인용 구성에서 기본으로 켜질 수 있다. 플러그인을 사용할지와 플러그인 안의 제품 경로가 어떤 기본값을 갖는지는 별개의 결정이다.
 
 출시 상태도 분리해서 읽어야 한다. 이 장이 고정한 2026-07-18의 `main`에는 보호된 회상과 조건부 기본값이 있었지만 당시 태그에는 없었다. 보호된 회상은 이후 `v2026.7.2-beta.3`, 조건부 기본값은 `v2026.7.2-beta.4`에 처음 포함되었다. **마지막 출시 상태 검증: 2026-07-26.**
 
@@ -296,15 +347,24 @@ flowchart TB
 - **제품 기본 경로:** `rememberAcrossConversations`는 전역 `session.dmScope`가 없거나 `main`이고 어떤 binding도 DM 범위를 따로 덮어쓰지 않는 개인용 설치에서 기본으로 켜진다. DM 격리를 설정하면 기본은 꺼지며, 명시한 `true`·`false`가 항상 우선한다.
 - **고급 경로:** 사용자가 Active Memory의 대상 에이전트, 대화 유형, 모델, 제한 시간과 프롬프트 스타일을 직접 정하는 설정은 선택 사항이다.
 
+두 경로는 켜진 조합에 따라 같은 플러그인을 다르게 사용한다.
+
+| 활성 조합                       | Active Memory가 호출하는 범위                                                                                                             | 추가되는 권한                                                             |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 제품 기본 경로만                | `memory_search`, 보호된 `corpus=sessions`                                                                                                 | 같은 에이전트의 다른 비공개 대화만 결과로 허용한다.                       |
+| 고급 경로만                     | 운영자가 허용한 메모리 도구와 일반적으로 구성된 코퍼스                                                                                    | 특별한 대화 간 권한은 없다. 일반 도구·코퍼스 권한 안에서만 자동 호출한다. |
+| 제품 기본 경로와 고급 경로 모두 | 운영자가 허용한 도구를 유지한다. 내부 `conversationRecall.corpus = "configured"` 모드가 일반 설정 소스와 보호된 세션 소스를 합칠 수 있다. | `source=sessions` 결과에만 같은 에이전트·비공개 조건을 추가로 강제한다.   |
+
+여기서 `"configured"`는 `memory_search`에 넘기는 공개 `corpus` 값이 아니라, Active Memory 런타임이 도구의 유효 검색 소스를 고르는 **내부 `conversationRecall` 모드**다. 또한 고급 `toolsAllow`에는 `memory_get`, `sessions_search`, 또는 다른 등록 회상 도구를 명시할 수 있다. 이때 `sessions_search`는 보호된 세션 의미 검색으로 변하지 않고, 앞 절의 정확 FTS와 일반 세션 도구 가시성을 그대로 사용한다. 다만 `sessions_history`는 Active Memory의 예약 도구라 허용 목록에 추가할 수 없다. 따라서 고급 보조 실행은 `sessions_search`의 발췌를 요약할 수는 있어도, 주 모델처럼 세 앵커로 주변 이력을 이어 읽지는 못한다. [고급 허용 목록 정규화](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/config.ts#L105-L133), [예약 도구 목록](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/types.ts#L56-L88), [허용 도구 결과 판독](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/transcript.ts#L337-L430)을 보라.
+
 다만 설정의 기본값이 `true`가 될 수 있다는 사실만으로 회상이 실행되는 것은 아니다. 다음 조건을 모두 통과해야 한다.
 
 - `active-memory` 플러그인이 활성화되어 있어야 한다.
 - 현재 에이전트와 대화가 유효해야 한다.
 - 세션에서 `/active-memory off`로 끄지 않았어야 한다.
-- `memory_search`가 허용 도구에 있어야 한다.
-- 제품 기본 경로라면 선택된 메모리 슬롯이 정확히 `memory-core`여야 한다.
+- 제품 기본 경로라면 `memory_search`가 허용 도구에 있고, 선택된 메모리 슬롯이 정확히 `memory-core`여야 한다. 고급 경로만 실행할 때는 운영자가 구성한 허용 도구가 기준이다.
 
-조건을 모두 통과하면 Active Memory는 자격을 갖춘 비공개 답변을 만들기 전, 검색 전용으로 제한된 보조 실행을 한 번 수행한다. 관련 결과가 있으면 숨은 컨텍스트 요약을 주 모델 앞에 붙이고, 결과가 없거나 검색이 불가능하거나 시간 제한을 넘으면 원래 답변을 계속한다. 이 경로는 자체 장기 기억을 쓰지 않는다. [개인용 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/config-utils.ts#L177-L200)과 [실행 자격·폴백](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.ts#L303-L448)에 근거한다.
+조건을 모두 통과하면 Active Memory는 자격을 갖춘 비공개 답변을 만들기 전, 검색 전용으로 제한된 보조 실행을 한 번 수행한다. 관련 결과가 있으면 숨은 컨텍스트 요약을 주 모델 앞에 붙이고, 결과가 없거나 검색이 불가능하거나 시간 제한을 넘으면 원래 답변을 계속한다. 이 경로는 자체 장기 기억을 쓰지 않는다. [개인용 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/config-utils.ts#L177-L200), [실행 자격·코퍼스 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.ts#L350-L430), [보조 실행과 결과 판독](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L270-L319)에 근거한다.
 
 보호 범위는 일반 세션 도구 가시성보다 좁다. 목적지와 후보 모두 세션 메타데이터와 모든 별칭으로 비공개라고 확인되어야 한다.
 
@@ -315,7 +375,7 @@ flowchart TB
 | 모든 별칭이 비공개라고 확인된 기록             | 다른 에이전트, 유형 불명, 비공개·공유 별칭이 섞인 기록 |
 | 신뢰된 비샌드박스 런타임이 요청한 결과         | 샌드박스 또는 모델이 임의로 넓힌 코퍼스                |
 
-순수한 보호 세션 회상의 인증이 실패하면 결과는 전부 비운다. 고급 설정이 일반 Markdown과 대화를 함께 검색하는 `corpus=configured` 경로라면, 인증되지 않은 `source=sessions` 결과만 제거하고 세션이 아닌 Markdown 결과는 남길 수 있다. 즉 “권한 실패 = 모든 종류의 기억 삭제”도 보편 규칙은 아니다. [결과별 실패 폐쇄](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/session-search-visibility.ts#L191-L225)가 두 경우를 구분한다.
+순수한 보호 세션 회상의 인증이 실패하면 결과는 전부 비운다. 고급 설정이 일반 Markdown과 대화를 함께 검색하는 내부 `conversationRecall.corpus = "configured"` 경로라면, 인증되지 않은 `source=sessions` 결과만 제거하고 세션이 아닌 Markdown 결과는 남길 수 있다. 즉 “권한 실패 = 모든 종류의 기억 삭제”도 보편 규칙은 아니다. [결과별 실패 폐쇄](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/session-search-visibility.ts#L191-L225)가 두 경우를 구분한다.
 
 `memory-lancedb` 같은 대체 메모리 슬롯 소유자는 자체 회상 계약을 가지며 이 `memory-core` 전용 보호 경로를 자동으로 얻지 않는다.
 
@@ -323,7 +383,7 @@ flowchart TB
 
 ### 두 종류의 대화 검색은 권한 검사 순서도 다르다
 
-앞서 대화 기록을 읽는 두 경로를 나눴는데, 둘은 검사 시점까지 다르다. 일반 `sessions_search`는 호출자의 세션 도구 가시성으로 검색 후보를 정하고, 보이는 결과를 모은 다음 최종 상한을 적용한다. 반면 `memory_search`의 세션 코퍼스와 보호된 Active Memory는 백엔드가 먼저 후보를 순위화·제한한 뒤 각 `source=sessions` 결과를 검사한다. 그래서 상위 6개 가운데 두 개가 권한 검사에서 막히면 네 개만 남을 수 있다. 차단된 결과는 인용, 사용자 노출, Dreaming 회상 추적 전에 버려지지만 이미 백엔드 결과 자리를 사용했기 때문이다.
+앞서 대화 기록을 읽는 두 경로를 나눴는데, 둘은 검사 시점까지 다르다. 일반 `sessions_search`는 호출자의 세션 도구 가시성으로 검색 후보를 정하고, 보이는 결과를 모은 다음 최종 상한을 적용한다. 반면 `memory_search(corpus=sessions)`는 백엔드가 먼저 후보를 순위화·제한한 뒤 각 결과를 검사한다. Active Memory의 보호된 대화 간 회상도 이 `memory_search` 경로를 자동 호출하므로 같은 순서를 따른다. 그래서 상위 6개 가운데 두 개가 권한 검사에서 막히면 네 개만 남을 수 있다. 차단된 결과는 인용, 사용자 노출, Dreaming 회상 추적 전에 버려지지만 이미 백엔드 결과 자리를 사용했기 때문이다.
 
 ```mermaid
 flowchart LR
@@ -355,15 +415,15 @@ flowchart LR
 
 **메모리 슬롯**은 우선 어느 메모리 플러그인을 선택할지 정한다. 그러나 선택 결과가 항상 “한 플러그인의 능력만 남는다”는 뜻은 아니다. **Dreaming 동시 로드 예외**에서는 선택된 주 메모리 플러그인 옆에 `memory-core`의 Dreaming 능력을 함께 등록하므로 두 플러그인의 능력이 합쳐질 수 있다. 여기서 동시 로드는 QMD처럼 외부 프로그램을 실행하는 “사이드카”와 다른 개념이다. **추가형**은 애초에 선택된 슬롯 옆에서 다른 역할을 더한다.
 
-| 구성 요소        | 바꾸는 단계                                 | 기준 원본과 쓰기 책임                                                                          | 관계와 기본 상태                                                                                                                          |
-| ---------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 내장 SQLite 검색 | Markdown과 선택된 세션 코퍼스의 인덱스·검색 | 원본을 읽어 에이전트별 DB의 메모리 테이블에 FTS·벡터 파생 상태를 쓴다.                         | `memory-core`의 기본 백엔드                                                                                                               |
-| QMD              | 같은 코퍼스의 검색 구현                     | 별도 컬렉션·갱신·임베딩·선택적 비공개 세션 내보내기를 관리한다.                                | `memory-core` 안의 대체 백엔드, 선택 사항                                                                                                 |
-| LanceDB          | 선택 메모리 구현의 자체 저장·회상           | 자체 레코드와 DB, `memory_recall`·`memory_store`·`memory_forget`, 자동 저장·회상을 소유한다.   | 슬롯 선택에서는 `memory-core`의 대안. Dreaming 동시 로드가 허용되면 유효 능력은 혼합될 수 있지만 보호된 대화 간 회상은 자동 상속하지 않음 |
-| Active Memory    | **언제** 검색하는가                         | 답변 전에 제한된 회상 요약만 모델 컨텍스트에 넣고 의미 원본은 쓰지 않는다.                     | 개인용 `rememberAcrossConversations` 경로는 기본이 될 수 있고, 고급 대상 설정은 선택 사항                                                 |
-| Dreaming         | 작업 기억을 장기 기억으로 **승격**하는 과정 | 회상·체크포인트 기계 상태는 SQLite, 검토 산출물은 파일, 자격 있는 결과는 `MEMORY.md`에 쓴다.   | 기본 비활성; `memory-core` 소유 기능                                                                                                      |
-| Memory Wiki      | 구조화된 지식 계층                          | 출처·주장·모순·신선도를 가진 로컬 볼트와 재생성 가능한 컴파일 상태를 관리한다.                 | 선택된 메모리 슬롯 옆의 추가형 계층                                                                                                       |
-| Honcho           | 외부 사용자·에이전트 모델링과 회상          | 외부 서비스가 대화를 보존하고 모델을 만들며, 프롬프트 주입과 별도 Honcho 조회 도구를 제공한다. | 선택된 슬롯 옆의 추가형 외부 플러그인                                                                                                     |
+| 구성 요소        | 바꾸는 단계                                 | 기준 원본과 쓰기 책임                                                                                                                | 관계와 기본 상태                                                                                                                          |
+| ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 내장 SQLite 검색 | Markdown과 선택된 세션 코퍼스의 인덱스·검색 | 원본을 읽어 에이전트별 DB의 메모리 테이블에 FTS·벡터 파생 상태를 쓴다.                                                               | `memory-core`의 기본 백엔드                                                                                                               |
+| QMD              | 같은 코퍼스의 검색 구현                     | 별도 컬렉션·갱신·임베딩·선택적 비공개 세션 내보내기를 관리한다.                                                                      | `memory-core` 안의 대체 백엔드, 선택 사항                                                                                                 |
+| LanceDB          | 선택 메모리 구현의 자체 저장·회상           | 자체 레코드와 DB, `memory_recall`·`memory_store`·`memory_forget`, 자동 저장·회상을 소유한다.                                         | 슬롯 선택에서는 `memory-core`의 대안. Dreaming 동시 로드가 허용되면 유효 능력은 혼합될 수 있지만 보호된 대화 간 회상은 자동 상속하지 않음 |
+| Active Memory    | 기존 메모리 도구를 **언제** 자동 호출하는가 | 자체 인덱스 없이 답변 전 보조 실행이 주로 `memory_search`를 호출하고, 제한된 요약만 모델 컨텍스트에 넣는다. 의미 원본은 쓰지 않는다. | 개인용 `rememberAcrossConversations` 경로는 기본이 될 수 있고, 고급 대상 설정은 선택 사항                                                 |
+| Dreaming         | 작업 기억을 장기 기억으로 **승격**하는 과정 | 회상·체크포인트 기계 상태는 SQLite, 검토 산출물은 파일, 자격 있는 결과는 `MEMORY.md`에 쓴다.                                         | 기본 비활성; `memory-core` 소유 기능                                                                                                      |
+| Memory Wiki      | 구조화된 지식 계층                          | 출처·주장·모순·신선도를 가진 로컬 볼트와 재생성 가능한 컴파일 상태를 관리한다.                                                       | 선택된 메모리 슬롯 옆의 추가형 계층                                                                                                       |
+| Honcho           | 외부 사용자·에이전트 모델링과 회상          | 외부 서비스가 대화를 보존하고 모델을 만들며, 프롬프트 주입과 별도 Honcho 조회 도구를 제공한다.                                       | 선택된 슬롯 옆의 추가형 외부 플러그인                                                                                                     |
 
 명시적인 슬롯 설정이 없을 때 선택자는 [`memory-core`를 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/plugins/slots.ts#L13-L21)으로 삼는다. 다만 이 플러그인의 manifest는 시작 시 무조건 켜는 방식이 아니라 필요할 때 활성화하는 `onStartup: false`이고, 플러그인 비활성화·거부 설정은 로드를 막을 수 있다. 로드되면 프롬프트 지침, 플러시 계획, 런타임, `memory_search`, `memory_get`, 명령과 CLI를 등록한다. [manifest 활성화](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/openclaw.plugin.json#L1-L8)와 [등록 진입점](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/index.ts#L188-L247)을 함께 보라.
 
@@ -469,11 +529,12 @@ Dreaming에도 비슷한 구분이 있다. 루트 `DREAMS.md`는 검토 표면�
 - ORBIT-10 문장은 정상 차례로 승인되면 정식 SQLite 대화 기록과 정확 FTS에 남는다.
 - “기억해 줘”라는 요청만으로 `MEMORY.md` 기록이 완료되지는 않는다. 에이전트의 파일 쓰기, 이후 정제, 또는 선택적 Dreaming 승격이 필요하다.
 - 컴팩션은 같은 세션에서 보이는 이력을 줄이는 요약이고, 컴팩션 전 플러시는 날짜 노트만 append한다.
-- `E_DEPLOY_413` 같은 정확한 문자열은 `sessions_search`, “누가 배포를 승인하지?” 같은 의미 질문은 `memory_search` 또는 보호된 Active Memory가 적합하다.
+- `E_DEPLOY_413` 같은 정확한 문자열과 그 주변 대화는 `sessions_search` → `sessions_history`가 적합하다.
+- Markdown 의미 메모리에서 “누가 배포를 승인하지?”를 찾을 때는 `memory_search(corpus=memory)`가 적합하다. 그 사실이 다른 비공개 대화에만 있다면, 자격 있는 Active Memory가 답변 전에 보호된 `memory_search(corpus=sessions)`를 호출할 수 있다.
 - 벡터 인덱스는 ORBIT-10을 장기 기억으로 만들지 않는다. 원본 Markdown이나 허용된 대화 코퍼스를 다시 찾기 쉽게 할 뿐이다.
 - 이 책의 설계 권고로는, 가장 오래 유지해야 할 승인 규칙을 원시 대화 보존 기간에 맡기지 말고 출처·적용 조건·만료 조건을 포함한 장기 의미 메모리로 정제해야 한다.
 
-이제 OpenClaw의 메모리 구조를 한 문장으로 요약할 수 있다. **대화는 먼저 세션 이력이 되고, 일부 내용만 Markdown 의미 메모리로 선별되며, 그중 오래 유지할 내용만 장기 기억으로 정제된다. 키워드·벡터 인덱스는 이 원본들을 다시 찾고, 부트스트랩·도구 호출·Active Memory가 찾은 내용을 다음 모델 컨텍스트로 가져온다.**
+이제 OpenClaw의 메모리 구조를 한 문장으로 요약할 수 있다. **대화는 먼저 세션 이력이 되고, 일부 내용만 Markdown 의미 메모리로 선별되며, 그중 오래 유지할 내용만 장기 기억으로 정제된다. 키워드·벡터 인덱스는 이 원본들을 다시 찾고, 부트스트랩·주 모델의 직접 도구 호출·Active Memory의 답변 전 도구 호출이 찾은 내용을 다음 모델 컨텍스트로 가져온다.**
 
 ## 다음 장으로
 

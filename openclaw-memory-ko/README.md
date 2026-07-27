@@ -1,6 +1,6 @@
-# OpenClaw 메모리 구조의 과거와 현재, 그리고 진화 과정
+# OpenClaw는 어떻게 기억하는가: 메모리 구조의 현재와 진화사
 
-_OpenClaw Memory: The Past and Present of Its Memory Architecture—and How It Evolved_
+_How OpenClaw Remembers: The Present and Evolution of Its Memory Architecture_
 
 AI 어시스턴트는 기억하는 것처럼 보인다. 그러나 모델은 지난 호출의 입력을 스스로 보존하지 않는다. 호출이 끝나면 그 컨텍스트도 사라진다.
 
@@ -114,7 +114,7 @@ OpenClaw는 사용자가 자신의 기기에서 운영하는 개인용 AI 어시
 - **2026-07-18:** 아키텍처와 외부 평가 자산의 근거 고정본을 확정했다.
 - **2026-07-26:** 출시 태그를 다시 확인하고, 용어를 통일했으며, Active Memory·삭제·백업·오염 경계와 외부 시스템 비교를 보강했다. 장별 반복 서술과 추적하기 어려운 짧은 커밋 표기도 정리했다.
 
-사실 오류, 깨진 링크, 판본 뒤에 달라진 출시 상태는 [`openclaw/openclaw` 이슈](https://github.com/openclaw/openclaw/issues)에 재현 근거와 함께 제보할 수 있다. 정오표 수정은 아키텍처 고정본의 역사 서술을 조용히 바꾸지 않고, 무엇을 언제 다시 확인했는지 이 기록에 남긴다.
+사실 오류, 깨진 링크, 판본 뒤에 달라진 출시 상태는 [`openclaw-memory-chronicle` 이슈](https://github.com/isingmodel/openclaw-memory-chronicle/issues)에 재현 근거와 함께 제보할 수 있다. 정오표 수정은 아키텍처 고정본의 역사 서술을 조용히 바꾸지 않고, 무엇을 언제 다시 확인했는지 이 기록에 남긴다.
 
 ## 이 책의 두 나침반
 

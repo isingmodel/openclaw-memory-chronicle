@@ -185,7 +185,7 @@ QMD가 실패했지만 내장 검색이 두 결과를 반환했다면 주 응답
 | 공급자 장애                   | FTS나 실패 시 닫힘 대신 검색이 조용히 빈 결과를 반환              |
 | QMD 폴백                      | 진단 없이 인용, 범위, 순위화가 달라짐                             |
 | 대화 간 프라이버시            | 다른 사람·그룹·보조 작업·에이전트의 내용이 회상에 유출            |
-| 스레드·채널 전달              | 올바른 기억을 잘못된 목적지에 보냄                                |
+| 스레드·채널 전달              | 올바른 기억을 잘못된 대상에 보냄                                  |
 | 멀티모달 추가 경로            | 설정하지 않은 미디어를 인덱싱하거나 설정한 미디어를 조용히 건너뜀 |
 | 마이그레이션·가져오기         | 재인덱싱이 내용을 중복하거나 출처·소유권을 잃음                   |
 
@@ -216,7 +216,7 @@ OpenClaw에는 다음과 같은 초기 QA 평가 묶음이 있다.
 - [`active-memory-preprompt-recall.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/active-memory-preprompt-recall.yaml): 선제 회상을 끈 세션에 플러그인 활동이 없고, 켠 세션의 첫 사용자 표시 답변이 회상된 선호를 쓰는지 확인한다.
 - [`session-memory-ranking.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/session-memory-ranking.yaml): 새 대화 기록 사실과 오래된 장기 의미 메모리를 경쟁시킨다.
 - [`remember-across-conversations.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/remember-across-conversations.yaml): 비공개 회상과 그룹·앵커·비활성화·일시 정지 제외를 시험한다.
-- [`thread-memory-isolation.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/thread-memory-isolation.yaml): 전달 목적지의 격리를 시험한다.
+- [`thread-memory-isolation.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/thread-memory-isolation.yaml): 전달 대상의 격리를 시험한다.
 - [`memory-failure-fallback.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/memory-failure-fallback.yaml): 도구를 사용할 수 없을 때 추측하지 않고 기권하는지 시험한다.
 - [`dreaming-shadow-trial-report.yaml`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/qa/scenarios/memory/dreaming-shadow-trial-report.yaml): 실제 승격 없이 기준선과 후보를 비교한 보고 전용 판정을 남긴다.
 
@@ -288,7 +288,7 @@ Dreaming의 섀도 시험 패턴은 다음처럼 재사용할 수 있다. 특히
 
 아래 목록은 아직 측정 기간과 임계값을 채워야 하는 후보다. 이름을 붙인 작업 부하, 측정 기간, 백분위·임계값, 오류 예산이 붙기 전에는 실제 SLO가 아니다.
 
-- 적합성 시험 묶음에서 에이전트 간·사람 간·그룹과 비공개 간·스레드 목적지 누출 0건
+- 적합성 시험 묶음에서 에이전트 간·사람 간·그룹과 비공개 간·스레드 간 누출 0건
 - 확정된 Markdown 쓰기 뒤 인덱스 신선도 지연의 상한
 - 필수 임베딩 공급자·인덱스 실패 때 조용히 비어 있는 성공 응답 0건
 - 선제 회상의 `p95` 지연 상한과 측정된 무작업 예산

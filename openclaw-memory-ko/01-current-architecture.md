@@ -30,7 +30,7 @@ OpenClaw의 정상적인 사용자·어시스턴트 메시지는 대화 기록�
 
 독자가 가장 먼저 버려야 할 그림은 “대화 → 장기 기억 → 벡터 DB”라는 한 줄짜리 파이프라인이다. 실제 구조는 한 대화에서 여러 상태가 갈라지고, 다음 답변을 만들 때 다시 합쳐지는 형태다.
 
-| 상태               | 기준 원본 또는 소유자                                         | 무엇을 보존하는가                                                                  | 다음 답변에는 어떻게 들어오는가                                |
+| 상태               | 정본 또는 소유자                                              | 무엇을 보존하는가                                                                  | 다음 답변에는 어떻게 들어오는가                                |
 | ------------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | 현재 모델 컨텍스트 | 이번 실행에서 조립된 프롬프트                                 | 지금 모델이 실제로 볼 수 있는 대화 이력, 컴팩션 요약, 부트스트랩 파일, 선택적 회상 | 그 답변을 만드는 동안만 모델 입력으로 존재한다.                |
 | 정식 대화 기록     | 에이전트별 SQLite의 세션·`transcript_events`                  | 사용자·어시스턴트 차례와 세션의 정식 이력                                          | 같은 세션의 이력 재생, `sessions_history`, 정확 검색에 쓰인다. |
@@ -38,11 +38,11 @@ OpenClaw의 정상적인 사용자·어시스턴트 메시지는 대화 기록�
 | 정제된 장기 기억   | 정확한 대문자 루트 파일 `MEMORY.md`                           | 오래 유지할 사실, 선호, 결정, 짧은 요약                                            | 일반 세션의 부트스트랩 컨텍스트와 `memory_search`에 들어간다.  |
 | 파생 검색 인덱스   | 내장 SQLite FTS·벡터 테이블 또는 [QMD 인덱스](#qmd-explained) | 원본의 청크, 키워드, 임베딩, 순위화 메타데이터                                     | 검색 결과를 만들 뿐이다. 원본에서 다시 만들 수 있다.           |
 
-이 다섯 상태는 앞의 네 사건과 이렇게 맞물린다. **연속**은 정식 대화 기록을 현재 모델 컨텍스트로 재생하는 결합이, **보존**은 정식 대화 기록이, **선별**은 일일 작업 기억과 정제된 장기 기억이, **회상**은 파생 검색 인덱스가 주로 담당한다. 상태 하나가 사건 하나를 독점하지는 않지만, 지금 어떤 사건을 이야기하는지 정하면 어느 상태를 들여다봐야 하는지도 함께 정해진다.
+이 다섯 상태는 앞의 네 사건과 이렇게 맞물린다. **연속**은 정식 대화 기록을 현재 모델 컨텍스트로 재생하는 경로가, **보존**은 정식 대화 기록이, **선별**은 일일 작업 기억과 정제된 장기 기억이, **회상**은 파생 검색 인덱스가 주로 담당한다. 상태 하나가 사건 하나를 독점하지는 않지만, 지금 어떤 사건을 이야기하는지 정하면 어느 상태를 들여다봐야 하는지도 함께 정해진다.
 
 여기서 SQLite가 두 번 등장한다고 해서 두 상태가 같지는 않다. 정식 대화 행은 원본이고, 그 옆의 FTS·벡터 테이블은 찾기 위한 파생 상태다. 반대로 Markdown은 “모든 런타임 상태”의 원본이 아니라 **사람이 읽고 고칠 수 있는 의미 메모리**의 원본이다. 정식 세션·대화 기록은 SQLite가 소유하고, 기본 `memory-core` 내장 경로의 인덱스와 기계 상태도 SQLite에 둔다. QMD·LanceDB 같은 대체 백엔드는 뒤에서 보듯 자기 저장소를 쓸 수 있다.
 
-표를 읽는 데 필요한 용어만 먼저 정해 두자. 이 장에서 **에이전트**(agent)는 자기 워크스페이스와 에이전트별 DB를 가진 실행 주체이고, **워크스페이스**(workspace)는 사람이 편집할 수 있는 기억 파일이 놓이는 공간이다. **세션 키**(session key)는 대화가 속한 논리적 통로의 라우팅 이름이며, **세션 ID**(session ID)는 리셋과 리셋 사이의 구체적인 대화 구간을 가리킨다. 하나의 세션 키가 `/reset` 뒤 새 세션 ID를 가리킬 수 있는 이유가 여기에 있다. 검색에 쓰이는 용어는 실제로 검색을 다루는 [뒷절](#벡터는-기억이-아니라-찾아보기다)에서 꺼낸다.
+표를 읽는 데 필요한 용어만 먼저 정해 두자. 이 장에서 **에이전트**(agent)는 자기 워크스페이스와 에이전트별 DB를 가진 실행 주체이고, **워크스페이스**(workspace)는 사람이 편집할 수 있는 기억 파일이 놓이는 공간이다. **세션 키**(session key)는 대화가 속한 논리적 통로의 라우팅 이름이며, **세션 ID**(session ID)는 리셋과 리셋 사이의 구체적인 대화 구간을 가리킨다. 하나의 세션 키가 `/reset` 뒤 새 세션 ID를 가리킬 수 있는 이유가 여기에 있다. 검색에 쓰이는 용어는 실제로 검색을 다루는 [뒤의 절](#벡터는-기억이-아니라-찾아보기다)에서 꺼낸다.
 
 ### 혼동 방지: 두 검색 도구와 한 자동 회상 계층
 
@@ -87,7 +87,7 @@ OpenClaw의 정상적인 사용자·어시스턴트 메시지는 대화 기록�
 - 지난 장애 코드: E_DEPLOY_413
 ```
 
-이 사실은 시스템 안에서 다음 네 모습으로 변한다. 아래 인덱스 청크는 이해를 위한 개념 카드이지 실제 DB 행 형식을 복제한 것은 아니다.
+이 사실은 시스템 안에서 다음 네 모습으로 나타난다. 아래 인덱스 청크는 이해를 위한 개념 카드이지 실제 DB 행 형식을 복제한 것은 아니다.
 
 | 단계                   | ORBIT-10의 모습                                                                 | 이 단계가 새로 하는 일                                             |
 | ---------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -121,7 +121,7 @@ ORBIT-10 규칙이 `memory/` 또는 `MEMORY.md`에 나타나는 데에는 서로
 
 컴팩션 전 플러시는 특히 자주 오해된다. 현재 계획은 날짜 파일 하나만 append하도록 강제하며 `MEMORY.md`, `DREAMS.md`, `SOUL.md`, `TOOLS.md`, `AGENTS.md`는 이 차례에서 읽기 전용이다. 따라서 “컴팩션이 곧 장기 기억을 갱신한다”는 설명은 틀리다. 정확한 계약은 [플러시 대상과 append-only 규칙](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/flush-plan.ts#L15-L43)에 있다.
 
-`session-memory` 훅도 플러시와 다르다. 표준 온보딩은 이 번들 훅을 활성화하고, 훅은 리셋 명령의 응답을 막지 않도록 백그라운드에서 새 슬러그 파일을 쓴다. 파일 머리말은 “Conversation Summary”지만, 내용은 의미를 다시 쓴 요약이 아니라 필터링한 최근 사용자·어시스턴트 발화의 사본이다. 기본 15개라는 수는 “최근 대화 꼬리”의 경계이지 중요도 판정이 아니다. [온보딩 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/commands/onboard-hooks.ts#L1-L38)과 [훅의 읽기·쓰기·비동기 실행](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/hooks/bundled/session-memory/handler.ts#L198-L349)을 함께 읽어야 한다. 비동기이므로 리셋 직후의 첫 시작 컨텍스트에 방금 쓴 파일이 반드시 들어간다고 보장할 수는 없다.
+`session-memory` 훅도 플러시와 다르다. 표준 온보딩은 이 번들 훅을 활성화하고, 훅은 리셋 명령의 응답을 막지 않도록 백그라운드에서 새 슬러그 파일을 쓴다. 파일의 소제목은 “Conversation Summary”지만, 내용은 의미를 다시 쓴 요약이 아니라 필터링한 최근 사용자·어시스턴트 발화의 사본이다. 기본 15개라는 수는 “최근 대화 꼬리”의 경계이지 중요도 판정이 아니다. [온보딩 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/commands/onboard-hooks.ts#L1-L38)과 [훅의 읽기·쓰기·비동기 실행](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/src/hooks/bundled/session-memory/handler.ts#L198-L349)을 함께 읽어야 한다. 비동기이므로 리셋 직후의 첫 시작 컨텍스트에 방금 쓴 파일이 반드시 들어간다고 보장할 수는 없다.
 
 ORBIT-10 대화가 훅을 통과했다면 파일의 핵심 모양은 다음과 같다. 값은 설명을 위한 합성 예시지만 머리말과 역할 표시는 실제 형식을 따른다.
 
@@ -193,7 +193,7 @@ flowchart TB
 
 계층이 나뉘어 있다고 해서 워크스페이스의 모든 Markdown이 기억이 되는 것은 아니다. 내장 스캐너는 루트의 정확한 `MEMORY.md`, `memory/` 아래의 자격 있는 파일, 설정한 추가 경로만 모은다. 워크스페이스 루트의 임의 Markdown을 전부 읽지 않으며, 심볼릭 링크를 건너뛰고 같은 실제 경로를 중복 제거한다. [코퍼스 열거 규칙](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/internal.ts#L153-L230)과 [안전한 파일 읽기](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/read-file.ts#L67-L181)가 이 경계를 구현한다.
 
-예를 들어 루트에 `orbit-notes.md`를 만들기만 해서는 기본 코퍼스가 되지 않는다. `memory/orbit-notes.md`에 두거나 추가 경로로 설정해야 한다. 반대로 `memory/dreaming/` 아래의 자격 있는 Markdown은 현재 일반 검색에 들어갈 수 있지만 Dreaming 승격 절차는 그 경로를 제외한다. 검색 자격과 승격 자격은 서로 다른 계약이며, 열린 [#71285](https://github.com/openclaw/openclaw/issues/71285)는 이 경계가 아직 완전히 정리되지 않았음을 보여 준다.
+예를 들어 루트에 `orbit-notes.md`를 만들기만 해서는 기본 코퍼스가 되지 않는다. `memory/orbit-notes.md`에 두거나 추가 경로로 설정해야 한다. 반대로 `memory/dreaming/` 아래의 자격 있는 Markdown은 현재 일반 검색에 들어갈 수 있지만 Dreaming 승격 절차는 그 경로를 제외한다. 검색 자격과 승격 자격은 서로 다른 계약이며, 열려 있는 [#71285](https://github.com/openclaw/openclaw/issues/71285)는 이 경계가 아직 완전히 정리되지 않았음을 보여 준다.
 
 여기까지가 “무엇이 남는가”다. 이제 남은 것을 어떻게 다시 찾아 오는지로 넘어간다.
 
@@ -220,7 +220,7 @@ FTS는 `ORBIT-10`, `Mina`, `E_DEPLOY_413`처럼 철자가 보존된 표현에 �
 
 임베딩 공급자와 FTS도 분리해서 이해해야 한다. 미지정 기본은 OpenAI 임베딩이지만, 인증 가능한 임베딩 공급자가 없거나 `provider: "none"`을 의도적으로 고르면 FTS만으로 검색할 수 있다. 반면 구체적인 원격 공급자를 명시했는데 사용할 수 없으면 조용히 FTS로 바꾸지 않고 “사용 불가”로 실패한다. 이 계약은 [메모리 설정 기준](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/docs/reference/memory-config.md#L101-L134)에 정리되어 있다.
 
-따라서 벡터 인덱스를 지우거나 다시 만드는 것은 의미 메모리를 지우는 일이 아니다. `MEMORY.md`와 `memory/*.md`가 남아 있으면 인덱스는 재생성할 수 있다. 반대로 원본 Markdown을 지우면 벡터 행만 남겨 장기 기억의 기준 원본으로 삼아서는 안 된다.
+따라서 벡터 인덱스를 지우거나 다시 만드는 것은 의미 메모리를 지우는 일이 아니다. `MEMORY.md`와 `memory/*.md`가 남아 있으면 인덱스는 재생성할 수 있다. 반대로 원본 Markdown을 지웠다면 남은 벡터 행을 장기 기억의 정본으로 삼아서는 안 된다.
 
 <a id="transcript-paths"></a>
 
@@ -316,7 +316,7 @@ flowchart TB
 
 표기까지 구분하면 더 선명하다. `corpus`는 `memory_search` 호출이 요청하는 검색 범위이고, `source`는 인덱스나 결과가 어느 원본 계열에서 왔는지 나타낸다. 따라서 호출 표기는 `memory_search(corpus=sessions)`, 그 결과의 출처 표기는 `source=sessions`다. 공개 도구가 받는 `corpus` 값은 `memory`, `wiki`, `all`, `sessions`뿐이다. 모델이 쓴 값은 요청일 뿐이며 런타임 권한을 넘지 못한다. [공개 `memory_search` 스키마](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/tools.shared.ts#L32-L37)를 보라.
 
-개인용 기본값에서 `rememberAcrossConversations: true`만 켠 상태를 의사 설정으로 쓰면 다음과 같다.
+개인용 기본값에서 `rememberAcrossConversations: true`만 켠 상태를 의사코드처럼 표기하면 다음과 같다.
 
 ```text
 색인 대상 sources                 = ["memory", "sessions"]
@@ -328,7 +328,7 @@ Active Memory의 보호 호출         = corpus "sessions"
 
 두 대화 인덱스의 갱신 시점도 다르다. 정확한 `session_transcript_fts`는 현재 활성 분기를 모호함 없이 연장하는 메시지 추가와 같은 트랜잭션에서 갱신되므로 방금 기록된 발화를 즉시 찾는 경로다. 반면 `source=sessions` 의미 인덱스는 `memory-core`가 커밋 뒤 변경 알림을 받아 5초 동안 묶고 재인덱싱하는 파생 경로라 잠시 뒤처질 수 있다. 시작 시 누락분 따라잡기와 분기 변경 재조정도 비동기다. [세션 의미 인덱스 동기화](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/memory/manager-session-sync-ops.ts#L37-L39)와 [디바운스 처리](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/memory/manager-session-sync-ops.ts#L191-L205)를 보라. “정확한 최신 발화”와 “뜻이 비슷한 과거 대화”가 서로 다른 도구인 이유가 여기에 있다.
 
-또 하나의 중요한 제한이 있다. `memory_get`은 일반 Markdown·Wiki 원문을 읽는 도구이지, 내장 세션 인덱스 결과를 여는 도구가 아니다. 대화 주변은 `sessions_history`로 읽는다. QMD도 `rememberAcrossConversations` 때문에 내부적으로 만든 비공개 세션 내보내기는 일반 `memory_get`에 노출하지 않으며, 사용자가 세션 내보내기를 명시적으로 켠 경우에만 읽을 수 있다. [QMD 세션 읽기 설정](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/backend-config.ts#L314-L333)이 이 경계를 고정한다.
+또 하나의 중요한 제한이 있다. `memory_get`은 일반 Markdown·Wiki 원문을 읽는 도구이지, 내장 세션 인덱스 결과를 여는 도구가 아니다. 대화 주변은 `sessions_history`로 읽는다. QMD 역시 `rememberAcrossConversations` 때문에 내부적으로 만든 비공개 세션 내보내기를 일반 `memory_get`에 노출하지 않으며, 사용자가 세션 내보내기를 명시적으로 켠 경우에만 읽을 수 있다. [QMD 세션 읽기 설정](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/backend-config.ts#L314-L333)이 이 경계를 고정한다.
 
 <a id="개인용-기본값의-보호된-대화-간-회상"></a>
 
@@ -359,7 +359,7 @@ Active Memory의 보호 호출         = corpus "sessions"
 
 여기서 **보조 실행 한 번**은 **검색 도구 한 번**을 뜻하지 않는다. Active Memory는 정해진 검색 호출을 감싸는 단순 함수가 아니라, `runEmbeddedAgent`로 제한된 검색 에이전트 실행 하나를 시작한다. 보조 모델은 `toolsAllow` 안에서 호출할 도구와 인자를 고르고, 결과를 본 뒤 같은 도구를 다른 표현이나 제한값으로 다시 호출하거나 다른 허용 도구로 이어 갈 수 있다. 제품 기본 경로에서는 허용 도구가 `memory_search` 하나로 좁아지므로 다른 종류의 도구로 넓어지지는 않지만, `memory_search`를 반드시 한 번만 호출하도록 고정하지도 않는다.
 
-그렇다고 재표현 검색이 항상 일어나는 것은 아니다. 검색용 질의는 고정된 도구 인자로 복사되지 않고 `Bounded memory search query`라는 프롬프트 입력으로 보조 모델에 전달된다. 기본 프롬프트는 이 질의를 기준으로 허용 도구를 쓰고, 선호·습관을 찾을 때는 빈 결과로 결론 내리기 전에 검색 상한이나 임계값을 느슨하게 적용하라고 지시한다. 그러나 일반적인 0건 결과마다 동의어로 다시 검색하라는 절차까지 명시하지는 않는다. 런타임도 첫 `memory_search`가 0건이라는 이유만으로 보조 실행을 즉시 끝내지 않아 후속 호출의 여지를 남긴다. 따라서 Active Memory는 **제한된 도구와 시간 안에서 움직이는 agentic retrieval loop**이지만, 재검색과 질의 재표현은 가능한 전략이지 매번 실행되는 보장된 단계는 아니다. [보조 모델의 검색 프롬프트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/prompt.ts#L66-L137), [제한된 임베디드 실행](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L252-L319), [0건 결과를 즉시 종료하지 않는 테스트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.test.ts#L4541-L4584)가 이 경계를 보여 준다.
+그렇다고 재표현 검색이 항상 일어나는 것은 아니다. 검색용 질의는 고정된 도구 인자로 복사되지 않고 `Bounded memory search query`라는 프롬프트 입력으로 보조 모델에 전달된다. 기본 프롬프트는 이 질의를 기준으로 허용 도구를 쓰고, 선호·습관을 찾을 때는 빈 결과로 결론 내리기 전에 검색 상한이나 임계값을 느슨하게 적용하라고 지시한다. 그러나 일반적인 0건 결과마다 동의어로 다시 검색하라는 절차까지 명시하지는 않는다. 런타임도 첫 `memory_search`가 0건이라는 이유만으로 보조 실행을 즉시 끝내지 않아 후속 호출의 여지를 남긴다. 따라서 Active Memory는 **제한된 도구와 시간 안에서 움직이는 에이전트형 회상 루프**(agentic retrieval loop)이지만, 재검색과 질의 재표현은 가능한 전략이지 매번 실행되는 보장된 단계는 아니다. [보조 모델의 검색 프롬프트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/prompt.ts#L66-L137), [제한된 임베디드 실행](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L252-L319), [0건 결과를 즉시 종료하지 않는 테스트](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.test.ts#L4541-L4584)가 이 경계를 보여 준다.
 
 다만 설정의 기본값이 `true`가 될 수 있다는 사실만으로 회상이 실행되는 것은 아니다. 다음 조건을 모두 통과해야 한다.
 
@@ -370,7 +370,7 @@ Active Memory의 보호 호출         = corpus "sessions"
 
 조건을 모두 통과하면 Active Memory는 자격을 갖춘 비공개 답변을 만들기 전, 검색 전용으로 제한된 보조 에이전트 실행 하나를 시작한다. 관련 결과가 있으면 숨은 컨텍스트 요약을 주 모델 앞에 붙이고, 결과가 없거나 검색이 불가능하거나 시간 제한을 넘으면 원래 답변을 계속한다. 이 경로는 자체 장기 기억을 쓰지 않는다. [개인용 기본값](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/config-utils.ts#L177-L200), [실행 자격·코퍼스 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/index.ts#L350-L430), [보조 실행과 결과 판독](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/active-memory/recall-run.ts#L270-L319)에 근거한다.
 
-보호 범위는 일반 세션 도구 가시성보다 좁다. 목적지와 후보 모두 세션 메타데이터와 모든 별칭으로 비공개라고 확인되어야 한다.
+보호 범위는 일반 세션 도구 가시성보다 좁다. 현재 답변 중인 대화와 후보 모두 세션 메타데이터와 모든 별칭으로 비공개라고 확인되어야 한다.
 
 | 허용되는 후보                                  | 차단되는 후보                                          |
 | ---------------------------------------------- | ------------------------------------------------------ |
@@ -379,7 +379,7 @@ Active Memory의 보호 호출         = corpus "sessions"
 | 모든 별칭이 비공개라고 확인된 기록             | 다른 에이전트, 유형 불명, 비공개·공유 별칭이 섞인 기록 |
 | 신뢰된 비샌드박스 런타임이 요청한 결과         | 샌드박스 또는 모델이 임의로 넓힌 코퍼스                |
 
-순수한 보호 세션 회상의 인증이 실패하면 결과는 전부 비운다. 고급 설정이 일반 Markdown과 대화를 함께 검색하는 내부 `conversationRecall.corpus = "configured"` 경로라면, 인증되지 않은 `source=sessions` 결과만 제거하고 세션이 아닌 Markdown 결과는 남길 수 있다. 즉 “권한 실패 = 모든 종류의 기억 삭제”도 보편 규칙은 아니다. [결과별 실패 폐쇄](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/session-search-visibility.ts#L191-L225)가 두 경우를 구분한다.
+순수한 보호 세션 회상의 인증이 실패하면 결과를 전부 비운다. 고급 설정이 일반 Markdown과 대화를 함께 검색하는 내부 `conversationRecall.corpus = "configured"` 경로라면, 인증되지 않은 `source=sessions` 결과만 제거하고 세션이 아닌 Markdown 결과는 남길 수 있다. 즉 “권한 실패 = 모든 종류의 기억 삭제”도 보편 규칙은 아니다. [결과별 실패 폐쇄](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-core/src/session-search-visibility.ts#L191-L225)가 두 경우를 구분한다.
 
 `memory-lancedb` 같은 대체 메모리 슬롯 소유자는 자체 회상 계약을 가지며 이 `memory-core` 전용 보호 경로를 자동으로 얻지 않는다.
 
@@ -419,7 +419,7 @@ flowchart LR
 
 **메모리 슬롯**은 우선 어느 메모리 플러그인을 선택할지 정한다. 그러나 선택 결과가 항상 “한 플러그인의 능력만 남는다”는 뜻은 아니다. **Dreaming 동시 로드 예외**에서는 선택된 주 메모리 플러그인 옆에 `memory-core`의 Dreaming 능력을 함께 등록하므로 두 플러그인의 능력이 합쳐질 수 있다. 여기서 동시 로드는 QMD처럼 외부 프로그램을 실행하는 “사이드카”와 다른 개념이다. **추가형**은 애초에 선택된 슬롯 옆에서 다른 역할을 더한다.
 
-| 구성 요소        | 바꾸는 단계                                 | 기준 원본과 쓰기 책임                                                                                                                | 관계와 기본 상태                                                                                                                          |
+| 구성 요소        | 바꾸는 단계                                 | 정본과 쓰기 책임                                                                                                                     | 관계와 기본 상태                                                                                                                          |
 | ---------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | 내장 SQLite 검색 | Markdown과 선택된 세션 코퍼스의 인덱스·검색 | 원본을 읽어 에이전트별 DB의 메모리 테이블에 FTS·벡터 파생 상태를 쓴다.                                                               | `memory-core`의 기본 백엔드                                                                                                               |
 | QMD              | 같은 코퍼스의 검색 구현                     | 별도 컬렉션·갱신·임베딩·선택적 비공개 세션 내보내기를 관리한다.                                                                      | `memory-core` 안의 대체 백엔드, 선택 사항                                                                                                 |
@@ -481,7 +481,7 @@ flowchart LR
 
 QMD를 켜면 OpenClaw는 이 원본을 에이전트별 QMD 컬렉션에 연결하고 갱신한다. 사용자가 “`ORBIT-10` 승인자는?”이라고 물으면 기본 `search`가 정확한 어휘를 이용해 해당 구절을 찾을 수 있다. `vsearch`나 `query`를 선택한 설치에서는 “주간 배포를 누가 사인오프하지?”처럼 표현이 달라진 질문도 의미 후보가 될 수 있다. QMD가 돌려준 것은 원본을 가리키는 발췌와 점수이며, OpenClaw가 경로·범위·결과 수·인용을 검사한 뒤에야 현재 모델 컨텍스트에 들어간다.
 
-이 과정에서 QMD는 ORBIT-10 규칙을 새로 기억하겠다고 결정하지 않았고 `MEMORY.md`를 대신 소유하지도 않는다. QMD의 인덱스를 지우면 검색 상태를 다시 만들어야 하지만 원문은 남는다. 반대로 `MEMORY.md`의 문장을 지우면 오래된 QMD 인덱스를 장기 기억의 정본으로 삼아서는 안 된다. 추가 디렉터리를 QMD에 연결하거나 대화 기록을 위생 처리된 Markdown으로 내보내 인덱싱해도, 그 자료가 자동으로 선별된 장기 기억으로 승격되는 것은 아니다.
+이 과정에서 QMD는 ORBIT-10 규칙을 새로 기억하겠다고 결정하지 않았고 `MEMORY.md`를 대신 소유하지도 않는다. QMD의 인덱스를 지우면 검색 상태를 다시 만들어야 하지만 원문은 남는다. 반대로 `MEMORY.md`의 문장을 지우면 오래된 QMD 인덱스를 장기 기억의 정본으로 삼아서는 안 된다. 추가 디렉터리를 QMD에 연결하거나 대화 기록에서 민감 정보를 걸러 낸 Markdown으로 내보내 인덱싱해도, 그 자료가 자동으로 선별된 장기 기억으로 승격되는 것은 아니다.
 
 기본적으로 QMD는 같은 Markdown 원본을 별도 에이전트 컬렉션에 인덱싱하고, 선택적 외부 경로와 세션 내보내기, 갱신·임베딩 수명주기를 관리한다. 그러나 `includeDefaultMemory: false`로 기본 Markdown 컬렉션을 빼고 사용자 컬렉션만 둘 수도 있으므로 “항상 내장 엔진과 같은 코퍼스”라고 단정해서는 안 된다. 어느 검색 모드도 Markdown을 QMD의 소유물로 바꾸지 않는다. [QMD 기본값과 범위](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/backend-config.ts#L127-L161)와 [기본 컬렉션 선택](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/backend-config.ts#L450-L494)을 보라.
 
@@ -516,7 +516,7 @@ QMD를 켜면 OpenClaw는 이 원본을 에이전트별 QMD 컬렉션에 연결�
 
 이 표의 핵심은 “삭제가 불가능하다”가 아니라 **삭제 단위가 저장소마다 다르다**는 것이다. 예를 들어 LanceDB의 [`memory_forget`](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/extensions/memory-lancedb/index.ts#L1750-L1793)은 그 플러그인의 레코드를 지우지만 Markdown이나 대화 기록까지 지우지 않는다. 정식 [`sessions.delete` 매개변수](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/gateway-protocol/src/schema/sessions.ts#L435-L451)는 대화 기록 삭제 여부를 따로 받으며, [대화 기록 코퍼스 계약](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/packages/memory-host-sdk/src/host/session-transcript-corpus.ts#L508-L518)은 보존된 reset/delete 산출물이 검색 코퍼스에 남을 수 있음을 명시한다.
 
-따라서 삭제 완료의 증거는 최소한 세 가지다. 권위 원본이 사라졌는가, 파생 인덱스가 다음 동기화 뒤 그 내용을 반환하지 않는가, 별도로 구체화되거나 플러그인이 소유한 복사본의 보존 정책을 적용했는가. 이 세 질문을 하나의 제품 작업으로 묶지 못하는 현재의 공백은 [10장](10-current-contract-gaps.md#deletion-contract-gap)에서 정식 간극으로 다룬다.
+따라서 삭제 완료의 증거는 최소한 세 가지다. 정본이 사라졌는가, 파생 인덱스가 다음 동기화 뒤 그 내용을 반환하지 않는가, 별도로 구체화되거나 플러그인이 소유한 복사본의 보존 정책을 적용했는가. 이 세 질문을 하나의 제품 작업으로 묶지 못하는 현재의 공백은 [10장](10-current-contract-gaps.md#deletion-contract-gap)에서 정식 간극으로 다룬다.
 
 ## 현재 계약에서 독자가 알아야 할 주의점
 

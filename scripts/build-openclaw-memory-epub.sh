@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BOOK_REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BOOK_DIR="${BOOK_REPO_ROOT}/openclaw-memory-ko"
 BOOK_LICENSE="${BOOK_REPO_ROOT}/LICENSE"
+BOOK_COVER="${BOOK_REPO_ROOT}/assets/cover/openclaw-memory-cover.png"
 DEFAULT_OUTPUT="${BOOK_REPO_ROOT}/dist/openclaw-memory-chronicle-ko.epub"
 
 usage() {
@@ -57,6 +58,10 @@ if [[ ! -d "${BOOK_DIR}" ]]; then
 fi
 if [[ ! -f "${BOOK_LICENSE}" ]]; then
   printf 'error: book license not found: %s\n' "${BOOK_LICENSE}" >&2
+  exit 1
+fi
+if [[ ! -f "${BOOK_COVER}" ]]; then
+  printf 'error: book cover not found: %s\n' "${BOOK_COVER}" >&2
   exit 1
 fi
 
@@ -516,9 +521,11 @@ pandoc "${COMBINED_MARKDOWN}" \
   --toc-depth=3 \
   --split-level=1 \
   --css="${CSS_FILE}" \
+  --epub-cover-image="${BOOK_COVER}" \
   --epub-embed-font="${FONT_SUBSET}" \
   --resource-path="${WORK_DIR}:${BOOK_DIR}:${BOOK_REPO_ROOT}" \
   --metadata='title=OpenClaw는 어떻게 기억하는가: 메모리 구조의 현재와 진화사' \
+  --metadata='author=Kibum Kim' \
   --metadata='lang=ko-KR' \
   --metadata='toc-title=목차' \
   --metadata='date=2026-07-27' \

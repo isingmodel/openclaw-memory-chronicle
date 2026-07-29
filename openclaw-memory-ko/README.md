@@ -99,8 +99,9 @@ OpenClaw는 사용자가 자신의 기기에서 운영하는 개인용 AI 어시
 ## 판본과 범위
 
 - 저장소는 [`openclaw/openclaw`](https://github.com/openclaw/openclaw)다.
-- 저작권은 © 2026 OpenClaw Foundation에 있다.
-- 라이선스는 [MIT License](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/LICENSE)다.
+- 이 책의 저작권은 © 2026 Kibum Kim에 있다.
+- 이 책과 저장소 소스는 [MIT License](https://github.com/isingmodel/openclaw-memory-chronicle/blob/main/LICENSE)로 배포한다.
+- 이 책에서 참조하는 OpenClaw 소스 코드와 공식 문서의 저작권은 © 2026 OpenClaw Foundation에 있으며, [MIT License](https://github.com/openclaw/openclaw/blob/a115af277410a91fb039d2ed699eafad706f5c73/LICENSE)를 따른다.
 - 이 책이 말하는 “현재”는 OpenClaw `main`의 [`a115af277410`](https://github.com/openclaw/openclaw/tree/a115af277410a91fb039d2ed699eafad706f5c73), 2026-07-18이다. 본문의 “현재”, “지금”, “오늘날”은 모두 이 시점을 가리킨다.
 - 출시 상태를 마지막으로 검증한 날은 2026-07-26이다. 아키텍처 고정본 뒤에 생성된 태그로는 최초 포함 태그 표기만 갱신하고, 본문의 현재 계약에는 섞지 않는다.
 - 본문은 한국어로 쓰되 영어 기술 식별자와 1차 자료 링크는 유지한다.
